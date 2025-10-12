@@ -2,7 +2,7 @@ import { Sparkles, Download } from "lucide-react";
 import { useState } from "react";
 import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
-import "../../styles/inputPanel.css";
+import "../../styles/InputPanel.css";
 
 export default function InputPanel() {
   const [inputText, setInputText] = useState("");
