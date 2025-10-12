@@ -21,4 +21,7 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_SECRET: str
     GITHUB_REDIRECT_URI: str
 
+    FRONTEND_ORIGIN: str
+    BACKEND_URL: str
+
 settings = Settings()

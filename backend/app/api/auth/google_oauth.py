@@ -183,18 +183,18 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         print("[DB ERROR]", repr(e))
         traceback.print_exc()
         raise HTTPException(500, f"Lỗi lưu DB: {e}")
-    jwt_token = create_access_token(db_user.id)
+    jwt_token = create_access_token(str(db_user.id))
 
-    request.session.pop("oauth", None)
+    resp = RedirectResponse(settings.FRONTEND_ORIGIN, status_code=302)
 
-    return {
-        "message": "Đăng nhập Google thành công",
-        "user": {
-            "id": db_user.id,
-            "email": db_user.email,
-            "full_name": db_user.full_name,
-            "avatar_url": db_user.avatar_url,
-        },
-        "provider": "GOOGLE",
-        "jwt": jwt_token
-    }
+    resp.set_cookie(
+        key="access_token",
+        value=jwt_token,
+        httponly=True,
+        secure=False, 
+        samesite="lax",
+        path="/",
+        max_age=3600,
+    )
+
+    return resp

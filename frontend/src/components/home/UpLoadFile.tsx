@@ -1,5 +1,5 @@
 import { FileText } from "lucide-react";
-import "../../styles/uploadFile.css";
+import "../../styles/UpLoadFile.css";
 import * as mammoth from "mammoth";
 
 interface UpLoadFileProps {

@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.security import create_access_token
 from app.db.session import get_db
 from app.models.user import User, AuthIdentity, Provider 
+from starlette.responses import RedirectResponse
 
 router = APIRouter(prefix="/auth/github", tags=["auth-github"])
 
@@ -195,18 +196,17 @@ async def github_callback(
         db.rollback()
         raise HTTPException(500, f"Lỗi lưu DB: {e}")
 
-    jwt_token = create_access_token(db_user.id)
-    oauth_map.pop(state, None)
-    request.session["oauth_map"] = oauth_map
+    jwt_token = create_access_token(str(db_user.id))
 
-    return {
-        "message": "Đăng nhập GitHub thành công",
-        "user": {
-            "id": db_user.id,
-            "email": db_user.email,
-            "full_name": getattr(db_user, "full_name", None),
-            "avatar_url": getattr(db_user, "avatar_url", None), 
-        },
-        "provider": "GITHUB",
-        "jwt": jwt_token
-    }
+    resp = RedirectResponse(settings.FRONTEND_ORIGIN, status_code=302)
+
+    resp.set_cookie(
+        key="access_token",
+        value=jwt_token,
+        httponly=True,
+        secure=False, 
+        samesite="lax",
+        path="/",
+        max_age=3600,
+    )
+    return resp

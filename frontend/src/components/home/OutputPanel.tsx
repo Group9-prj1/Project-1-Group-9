@@ -1,4 +1,4 @@
-import "../../styles/outputPanel.css";
+import "../../styles/OutputPanel.css";
 
 export default function OutputPanel() {
   return (
