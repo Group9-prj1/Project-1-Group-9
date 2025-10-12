@@ -1,4 +1,4 @@
-import { FileText, Menu, User, Sparkles } from "lucide-react";
+import { FileText, Menu, User, Sparkles, LogOut } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import "../../styles/Header.css";
 
@@ -13,15 +13,21 @@ export default function Header() {
 
   useEffect(() => {
     const base = import.meta.env.VITE_API_BASE;
-    console.log("API_BASE =", base);
     fetch(`${base}/user/me`, { credentials: "include" })
-      .then(res => (res.ok ? res.json() : null))
-      .then(data => {
-        console.log("ME =", data);
-        setUser(data);
-      })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setUser(data))
       .catch(() => setUser(null));
   }, []);
+
+  const handleLogout = async () => {
+    const base = import.meta.env.VITE_API_BASE;
+    await fetch(`${base}/user/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+    setUser(null);
+    window.location.reload();
+  };
 
   return (
     <header className="app-header">
@@ -44,7 +50,7 @@ export default function Header() {
           <div className="nav-right">
             {user ? (
               <div className="user-profile-wrapper" ref={dropdownRef}>
-                <div 
+                <div
                   className="user-profile"
                   onClick={() => setShowDropdown(!showDropdown)}
                 >
@@ -54,6 +60,7 @@ export default function Header() {
                         src={user.avatar_url}
                         alt="avatar"
                         className="user-avatar"
+                        referrerPolicy="no-referrer"
                       />
                     ) : (
                       <div className="user-avatar-placeholder">
@@ -69,7 +76,18 @@ export default function Header() {
                   </div>
                   <div className="profile-glow"></div>
                 </div>
-              
+
+                {showDropdown && (
+                  <div className="dropdown-menu">
+                    <button
+                      className="dropdown-item logout-btn"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="icon-4" />
+                      <span>Đăng xuất</span>
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <button onClick={handleLogin} className="account-btn">
@@ -78,6 +96,7 @@ export default function Header() {
                 <span className="hidden sm:inline">Đăng nhập</span>
               </button>
             )}
+
             <button className="menu-btn">
               <Menu className="icon-6" />
             </button>

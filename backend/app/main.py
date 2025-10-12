@@ -5,10 +5,10 @@ from app.db.session import SessionLocal
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from app.core.config import settings
-
 from app.api.auth.google_oauth import router as google_api
 from app.api.auth.github_oauth import router as github_api
 from app.api.user.user_api import router as user_api
+from app.api.user.user_api import router as logout_api
 
 app = FastAPI(title="Text Summarizer Backend", version="1.0")
 
@@ -49,3 +49,4 @@ def db_test(db: Session = Depends(get_db)):
 app.include_router(google_api)
 app.include_router(github_api)
 app.include_router(user_api)
+app.include_router(logout_api)
