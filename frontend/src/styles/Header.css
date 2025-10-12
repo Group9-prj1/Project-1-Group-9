@@ -67,7 +67,106 @@
   .menu-btn:hover { @apply shadow-md; }
 
   .icon-6 { @apply w-6 h-6; }
+  .icon-5 { @apply w-5 h-5; }
   .icon-4 { @apply w-4 h-4; }
+
+  /* User Profile Wrapper */
+  .user-profile-wrapper {
+    @apply relative;
+  }
+
+  /* User Profile Styles */
+  .user-profile {
+    @apply relative px-4 py-2 rounded-xl cursor-pointer
+           bg-white/80 backdrop-blur-sm border border-gray-200/50
+           shadow-md hover:shadow-xl transition-all duration-300;
+  }
+  .user-profile:hover {
+    @apply border-purple-300/50 transform scale-105;
+  }
+
+  .user-profile-inner {
+    @apply relative flex items-center gap-3 z-10;
+  }
+
+  .user-avatar {
+    @apply w-10 h-10 rounded-full border-2 border-white shadow-lg
+           ring-2 ring-purple-400/30 transition-all duration-300;
+  }
+  .user-profile:hover .user-avatar {
+    @apply ring-4 ring-purple-500/50 scale-110;
+  }
+
+  .user-avatar-placeholder {
+    @apply w-10 h-10 rounded-full flex items-center justify-center
+           bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500
+           border-2 border-white shadow-lg ring-2 ring-purple-400/30
+           transition-all duration-300;
+  }
+  .user-profile:hover .user-avatar-placeholder {
+    @apply ring-4 ring-purple-500/50 scale-110;
+  }
+
+  .user-info {
+    @apply flex flex-col;
+  }
+
+  .user-greeting {
+    @apply text-xs font-medium text-gray-500 transition-colors duration-300;
+  }
+  .user-profile:hover .user-greeting {
+    @apply text-purple-600;
+  }
+
+  .user-name {
+    @apply text-sm font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600
+           bg-clip-text text-transparent max-w-[150px] truncate
+           transition-all duration-300;
+  }
+  .user-profile:hover .user-name {
+    @apply scale-105;
+    filter: drop-shadow(0 2px 4px rgba(147, 51, 234, 0.3));
+  }
+
+  .profile-glow {
+    @apply absolute inset-0 rounded-xl opacity-0
+           bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10
+           transition-opacity duration-300 pointer-events-none;
+  }
+  .user-profile:hover .profile-glow {
+    @apply opacity-100;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  /* Dropdown Menu */
+  .dropdown-menu {
+    @apply absolute top-full right-0 mt-2 w-48
+           bg-white/95 backdrop-blur-sm rounded-xl shadow-xl
+           border border-gray-200/50 overflow-hidden z-50;
+    animation: slideDown 0.2s ease-out;
+  }
+
+  .dropdown-item {
+    @apply w-full flex items-center gap-3 px-4 py-3
+           text-gray-700 hover:text-red-600 transition-all duration-200
+           hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50
+           text-sm font-medium;
+  }
+
+  .logout-btn:hover {
+    @apply pl-5;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes shine {
@@ -77,4 +176,8 @@
 @keyframes sparkle {
   0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.8; }
   50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
