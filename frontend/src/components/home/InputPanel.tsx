@@ -2,7 +2,7 @@ import { Sparkles, Download } from "lucide-react";
 import { useState } from "react";
 import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
-import "../../styles/InputPanel.css";
+import "../../styles/inputPanel.css";
 
 export default function InputPanel() {
   const [inputText, setInputText] = useState("");
@@ -14,7 +14,7 @@ export default function InputPanel() {
         <div className="ip-hero">
           <div className="ip-hero-row">
             <Sparkles className="ip-hero-icon" />
-            <h1 className="ip-title">Tóm tắt văn bản( web không dành cho bọn ngu)</h1>
+            <h1 className="ip-title">Tóm tắt văn bản</h1>
           </div>
         </div>
 

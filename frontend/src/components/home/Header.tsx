@@ -41,7 +41,7 @@ export default function Header() {
                 <div className="logo-shine"></div>
               </div>
               <div className="logo-text-wrapper">
-                <span className="logo-text">Summarizer</span>
+                <span className="logo-text">Tóm tắt văn bản</span>
                 <Sparkles className="icon-4 sparkle-icon" />
               </div>
             </div>
