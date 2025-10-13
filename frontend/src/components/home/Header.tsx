@@ -34,7 +34,7 @@ export default function Header() {
       <div className="header-glow"></div>
       <div className="header-inner">
         <div className="header-bar">
-          <div className="logo-container">
+          <div className="logo-container" onClick={() => (window.location.href = "/")}>
             <div className="logo">
               <div className="logo-badge">
                 <FileText className="icon-6 text-white" />

@@ -6,7 +6,7 @@ import "../../styles/InputPanel.css";
 
 export default function InputPanel() {
   const [inputText, setInputText] = useState("");
-  const maxChars = 10;
+  const maxChars = 2000;
 
   return (
     <div className="ip-page">
@@ -14,7 +14,7 @@ export default function InputPanel() {
         <div className="ip-hero">
           <div className="ip-hero-row">
             <Sparkles className="ip-hero-icon" />
-            <h1 className="ip-title">Tóm tắt văn bản</h1>
+            <h1 className="ip-title">Tóm tắt văn bản( web không dành cho bọn ngu)</h1>
           </div>
         </div>
 
@@ -29,7 +29,7 @@ export default function InputPanel() {
               <div className="ip-field">
                 <textarea
                   className="ip-textarea"
-                  placeholder="Nhập văn bản hoặc dán tại đây, sau đó nhấn Summarize để tóm tắt văn bản..."
+                  placeholder="Nhập văn bản hoặc dán tại đây, sau đó nhấn tóm tắt để tóm tắt văn bản..."
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   maxLength={maxChars}
