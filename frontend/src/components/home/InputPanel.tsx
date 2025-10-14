@@ -2,11 +2,11 @@ import { Sparkles, Download } from "lucide-react";
 import { useState } from "react";
 import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
-import "../../styles/InputPanel.css";
+import "../../styles/inputPanel.css";
 
 export default function InputPanel() {
   const [inputText, setInputText] = useState("");
-  const maxChars = 10;
+  const maxChars = 2000;
 
   return (
     <div className="ip-page">
@@ -29,7 +29,7 @@ export default function InputPanel() {
               <div className="ip-field">
                 <textarea
                   className="ip-textarea"
-                  placeholder="Nhập văn bản hoặc dán tại đây, sau đó nhấn Summarize để tóm tắt văn bản..."
+                  placeholder="Nhập văn bản hoặc dán tại đây, sau đó nhấn tóm tắt để tóm tắt văn bản..."
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   maxLength={maxChars}
