@@ -27,3 +27,30 @@ def create_summary(
     db.commit()
     db.refresh(summary)
     return summary
+
+@router.get("", response_model=list[SummaryView])
+def get_summaries(
+    skip: int = 0,
+    limit: int = Query(10, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    summaries = (
+        db.query(Summary)
+        .filter(Summary.user_id == current_user.id)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return summaries
+
+@router.get("/{summary_id}", response_model=SummaryView)
+def get_summary(
+    summary_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    summary = db.query(Summary).filter(Summary.id == summary_id, Summary.user_id == current_user.id).first()
+    if not summary:
+        raise HTTPException(status_code=404, detail="Summary not found")
+    return summary
