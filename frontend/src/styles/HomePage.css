@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+
+.btn-history {
+  @apply fixed left-2 top-24 z-40 inline-flex items-center gap-2 
+         rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm
+         shadow hover:bg-slate-50 active:scale-95 
+         dark:border-slate-800 dark:bg-slate-900;
+}
+
+/* Drawer chung */
+.drawer {
+  @apply fixed left-0 top-16 z-50 h-[calc(100vh-4rem)]
+         border-r border-slate-200 bg-white p-2 shadow-xl
+         dark:border-slate-800 dark:bg-slate-900
+         transition-transform duration-300 ease-in-out;
+}
+
+/* Kích cỡ drawer (nhỏ gọn). 
+   Bạn có thể đổi w-48/md:w-56 nếu muốn nhỏ nữa */
+.drawer--sm { 
+  @apply w-56 md:w-64;
+}
+
+/* Trạng thái */
+.drawer--open { @apply translate-x-0; }
+.drawer--closed { @apply -translate-x-full; }
+
+/* Header trong drawer */
+.drawer-header {
+  @apply mb-2 flex items-center justify-between px-1;
+}
+
+/* Nút icon chung */
+.icon-btn {
+  @apply rounded-lg p-1 text-slate-500 
+         hover:bg-slate-100 dark:hover:bg-slate-800;
+}
+
+/* Thân drawer cuộn nội dung */
+.drawer-body {
+  @apply h-[calc(100%-1.75rem)] overflow-auto;
+}
+
+/* Khối nội dung chính */
+.main-wrap {
+  @apply mx-auto max-w-5xl px-4 py-8;
+}
+
+}
