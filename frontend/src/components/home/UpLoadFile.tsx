@@ -4,7 +4,7 @@ import * as mammoth from "mammoth";
 
 interface UpLoadFileProps {
   onFileLoaded: (text: string) => void;
-  disabled?: boolean; 
+  disabled?: boolean;
 }
 
 export default function UpLoadFile({ onFileLoaded, disabled = false }: UpLoadFileProps) {
@@ -16,19 +16,30 @@ export default function UpLoadFile({ onFileLoaded, disabled = false }: UpLoadFil
     const ext = file.name.split(".").pop()?.toLowerCase();
 
     try {
+      let content = "";
+
       if (ext === "txt") {
-        const text = await file.text();
-        onFileLoaded(text);
+        content = await file.text();
       } else if (ext === "docx") {
         const arrayBuffer = await file.arrayBuffer();
         const { value } = await mammoth.extractRawText({ arrayBuffer });
-        onFileLoaded(value.trim());
+        content = value;
       } else {
-        alert("❌ Chỉ hỗ trợ tệp .txt hoặc .docx!");
+        alert("Chỉ hỗ trợ tệp .txt hoặc .docx!");
+        e.target.value = "";
+        return;
       }
+
+      if (!content.trim()) {
+        alert("Tệp trống! Vui lòng chọn tệp có nội dung.");
+        e.target.value = "";
+        return;
+      }
+
+      onFileLoaded(content.trim());
     } catch (err) {
       console.error("Lỗi khi đọc file:", err);
-      alert("Không thể đọc nội dung tệp.");
+      alert("❌ Không thể đọc nội dung tệp.");
     }
 
     e.target.value = "";
@@ -47,7 +58,7 @@ export default function UpLoadFile({ onFileLoaded, disabled = false }: UpLoadFil
         accept=".txt,.docx"
         className="hidden"
         onChange={handleFileChange}
-        disabled={disabled} 
+        disabled={disabled}
       />
     </label>
   );
