@@ -1,12 +1,27 @@
+// src/components/home/InputPanel.tsx
 import { Sparkles, Download } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
 import "../../styles/inputPanel.css";
 
-export default function InputPanel() {
-  const [inputText, setInputText] = useState("");
+type Props = {
+  originalText?: string;
+  summaryText?: string;
+  readOnly?: boolean; 
+};
+
+export default function InputPanel({
+  originalText = "",
+  summaryText = "",
+  readOnly = false,
+}: Props) {
+  const [inputText, setInputText] = useState(originalText);
   const maxChars = 2000;
+
+  useEffect(() => {
+    setInputText(originalText);
+  }, [originalText]);
 
   return (
     <div className="ip-page">
@@ -19,6 +34,7 @@ export default function InputPanel() {
         </div>
 
         <div className="ip-panel">
+          {/* Ô nhập văn bản gốc */}
           <div className="ip-wrap">
             <div className="ip-card">
               <label className="ip-label">
@@ -28,25 +44,34 @@ export default function InputPanel() {
 
               <div className="ip-field">
                 <textarea
-                  className="ip-textarea"
-                  placeholder="Nhập văn bản hoặc dán tại đây, sau đó nhấn tóm tắt để tóm tắt văn bản..."
+                  className={`ip-textarea ${readOnly ? "opacity-90 cursor-not-allowed" : ""}`}
+                  placeholder="Nhập hoặc dán văn bản ở đây…"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   maxLength={maxChars}
+                  readOnly={readOnly} // ✅ chỉ đọc khi xem chi tiết
                 />
               </div>
 
               <div className="ip-help">
                 <span className="ip-hint">
-                  💡 Hỗ trợ tối đa {maxChars.toLocaleString()} ký tự</span>
+                  💡 Tối đa {maxChars.toLocaleString()} ký tự
+                </span>
                 <span className="ip-count">
                   {inputText.length.toLocaleString()} / {maxChars.toLocaleString()}
                 </span>
               </div>
 
+              {/* Các nút vẫn hiển thị, nhưng bị vô hiệu hóa khi readOnly */}
               <div className="ip-actions">
-                <UpLoadFile onFileLoaded={setInputText} />
-                <button type="button" className="ip-primary">
+                <UpLoadFile onFileLoaded={setInputText} disabled={readOnly} /> 
+                {/* ⬆ thêm prop disabled để khóa nút tải lên */}
+
+                <button
+                  type="button"
+                  className={`ip-primary ${readOnly ? "opacity-60 cursor-not-allowed" : ""}`}
+                  disabled={readOnly} // ⬆ cũng disable nút “Tóm tắt”
+                >
                   <Sparkles className="ip-icon" />
                   <span>Tóm tắt</span>
                 </button>
@@ -54,6 +79,7 @@ export default function InputPanel() {
             </div>
           </div>
 
+          {/* Ô hiển thị kết quả */}
           <div className="ip-wrap">
             <div className="ip-card ip-card-output">
               <label className="ip-label">
@@ -61,11 +87,17 @@ export default function InputPanel() {
                 Kết quả tóm tắt
               </label>
 
-              <OutputPanel />
+              <OutputPanel text={summaryText} />
 
               <div className="ip-actions">
                 <button
                   className="ip-download"
+                  disabled={!summaryText?.trim()}
+                  title={
+                    summaryText?.trim()
+                      ? "Tải kết quả tóm tắt"
+                      : "Chưa có kết quả để tải"
+                  }
                 >
                   <Download className="w-4 h-4" />
                   <span>Tải xuống</span>

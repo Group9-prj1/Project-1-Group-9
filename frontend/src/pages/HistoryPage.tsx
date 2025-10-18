@@ -21,18 +21,14 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
+  // ✅ Lấy danh sách lịch sử
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
         const token = localStorage.getItem("token") ?? undefined;
-
-        if (!token) {
-          setItems([]);
-          setLoading(false);
-        }
-
         const data: SummaryView[] = await getSummaries(0, 20, token);
+
         const mapped: HistoryItem[] = data.map((s) => ({
           id: s.id,
           title: s.original_text
@@ -43,17 +39,14 @@ export default function HomePage() {
 
         setItems(mapped);
       } catch (e: any) {
-        if (String(e.message).includes("401")) {
-          setItems([]);
-        } else {
-          console.error("Lỗi tải lịch sử:", e);
-        }
+        setErr(e.message ?? "Lỗi tải lịch sử");
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
+  // ✅ Lấy chi tiết khi id thay đổi
   useEffect(() => {
     if (!id) {
       setCurrentSummary(null);
@@ -78,6 +71,7 @@ export default function HomePage() {
     <div>
       <Header />
 
+      {/* Nút mở lịch sử */}
       <button
         onClick={() => setOpenHistory(true)}
         className="hp-history-btn"
@@ -87,6 +81,7 @@ export default function HomePage() {
         <span>Lịch sử</span>
       </button>
 
+      {/* Thanh bên lịch sử */}
       <aside
         className={`hp-sidebar ${openHistory ? "translate-x-0" : "-translate-x-full"}`}
         role="dialog"
@@ -122,7 +117,11 @@ export default function HomePage() {
       </aside>
 
       <main>
-        <InputPanel/>
+        <InputPanel
+          originalText={currentSummary?.original_text ?? ""}
+          summaryText={currentSummary?.summary_text ?? ""}
+          readOnly={true}
+        />
 
         {detailLoading && (
           <div style={{ textAlign: "center", marginTop: "1rem", color: "#666" }}>

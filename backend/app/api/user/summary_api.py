@@ -7,6 +7,7 @@ from app.models.summary import Summary
 from app.schemas.summary import SummaryCreate,SummaryView
 from app.core.security import get_current_user
 from app.models.user import User
+from sqlalchemy import desc
 
 router = APIRouter(prefix="/summaries", tags=["summaries"])
 
@@ -38,6 +39,7 @@ def get_summaries(
     summaries = (
         db.query(Summary)
         .filter(Summary.user_id == current_user.id)
+        .order_by(desc(Summary.created_at))
         .offset(skip)
         .limit(limit)
         .all()
