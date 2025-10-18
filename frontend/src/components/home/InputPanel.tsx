@@ -2,6 +2,7 @@ import { Sparkles, Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
+import ErrorPanel from "./ErrorPanel";
 import "../../styles/inputPanel.css";
 
 type Props = {
@@ -17,6 +18,8 @@ export default function InputPanel({
 }: Props) {
   const [inputText, setInputText] = useState(originalText);
   const [notice, setNotice] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMsg, setModalMsg] = useState("");
   const maxChars = 2000;
 
   useEffect(() => {
@@ -34,6 +37,11 @@ export default function InputPanel({
       setInputText(text);
       setNotice(null);
     }
+  };
+
+  const handleUploadError = (message: string) => {
+    setModalMsg(message);
+    setModalOpen(true);
   };
 
   return (
@@ -67,30 +75,28 @@ export default function InputPanel({
                 />
               </div>
 
-            {notice && (
-              <div
-                className="mt-3 flex items-center gap-2 rounded-lg border border-yellow-500/40 bg-yellow-50 px-4 py-3 text-black shadow-sm"
-                role="alert"
-                aria-live="polite"
-              >
-                <span className="text-sm font-medium leading-tight">{notice}</span>
-              </div>
-            )}
-
+              {notice && (
+                <div
+                  className="mt-3 flex items-center gap-2 rounded-lg border border-yellow-500/40 bg-yellow-50 px-4 py-3 text-black shadow-sm"
+                  role="alert"
+                >
+                  <span className="text-sm font-medium">{notice}</span>
+                </div>
+              )}
 
               <div className="ip-help">
                 <span className="ip-hint">
                   💡 Tối đa {maxChars.toLocaleString()} ký tự
                 </span>
                 <span className="ip-count">
-                  {inputText.length.toLocaleString()} /{" "}
-                  {maxChars.toLocaleString()}
+                  {inputText.length.toLocaleString()} / {maxChars.toLocaleString()}
                 </span>
               </div>
 
               <div className="ip-actions">
                 <UpLoadFile
                   onFileLoaded={handleFileLoaded}
+                  onError={handleUploadError}
                   disabled={readOnly}
                 />
 
@@ -136,6 +142,13 @@ export default function InputPanel({
             </div>
           </div>
         </div>
+
+        <ErrorPanel
+          open={modalOpen}
+          title="Lỗi tải tệp"
+          message={modalMsg}
+          onClose={() => setModalOpen(false)}
+        />
       </div>
     </div>
   );
