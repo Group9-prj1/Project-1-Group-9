@@ -34,7 +34,6 @@ def verify_access_token_from_cookie(request: Request) -> str:
         uid = payload.get("sub")
         if not uid:
             raise HTTPException(status_code=401, detail="Invalid token")
-        # Không cần tự so sánh exp nữa — jose sẽ raise ExpiredSignatureError nếu hết hạn
         return str(uid)
     except ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
