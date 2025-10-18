@@ -31,7 +31,7 @@ export default function UpLoadFile({ onFileLoaded, disabled = false }: UpLoadFil
       }
 
       if (!content.trim()) {
-        alert("Tệp trống! Vui lòng chọn tệp có nội dung.");
+        alert("Tệp trống! Vui lòng chọn tệp có nội dung."); 
         e.target.value = "";
         return;
       }
