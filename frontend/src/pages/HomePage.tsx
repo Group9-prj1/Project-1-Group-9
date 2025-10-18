@@ -26,8 +26,13 @@ export default function HomePage() {
       try {
         setLoading(true);
         const token = localStorage.getItem("token") ?? undefined;
-        const data: SummaryView[] = await getSummaries(0, 20, token);
 
+        if (!token) {
+          setItems([]);
+          setLoading(false);
+        }
+
+        const data: SummaryView[] = await getSummaries(0, 20, token);
         const mapped: HistoryItem[] = data.map((s) => ({
           id: s.id,
           title: s.original_text
@@ -38,7 +43,11 @@ export default function HomePage() {
 
         setItems(mapped);
       } catch (e: any) {
-        setErr(e.message ?? "Lỗi tải lịch sử");
+        if (String(e.message).includes("401")) {
+          setItems([]);
+        } else {
+          console.error("Lỗi tải lịch sử:", e);
+        }
       } finally {
         setLoading(false);
       }
