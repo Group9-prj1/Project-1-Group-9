@@ -4,10 +4,12 @@ import * as mammoth from "mammoth";
 
 interface UpLoadFileProps {
   onFileLoaded: (text: string) => void;
+  disabled?: boolean; 
 }
 
-export default function UpLoadFile({ onFileLoaded }: UpLoadFileProps) {
+export default function UpLoadFile({ onFileLoaded, disabled = false }: UpLoadFileProps) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -33,7 +35,11 @@ export default function UpLoadFile({ onFileLoaded }: UpLoadFileProps) {
   };
 
   return (
-    <label className="ip-upload cursor-pointer">
+    <label
+      className={`ip-upload flex items-center gap-2 px-4 py-2 rounded-lg border
+        cursor-pointer transition-all duration-200
+        ${disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-indigo-50"}`}
+    >
       <FileText className="ip-icon" />
       <span>Tải lên tệp tin (.txt / .docx)</span>
       <input
@@ -41,6 +47,7 @@ export default function UpLoadFile({ onFileLoaded }: UpLoadFileProps) {
         accept=".txt,.docx"
         className="hidden"
         onChange={handleFileChange}
+        disabled={disabled} 
       />
     </label>
   );

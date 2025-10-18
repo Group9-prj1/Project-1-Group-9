@@ -11,9 +11,11 @@ export type HistoryItem = {
 type Props = {
   items: HistoryItem[];
   className?: string;
+  onItemClick?: (id: number | string) => void;
+  activeId?: number | string;                   
 };
 
-export default function HistoryPanel({ items, className }: Props) {
+export default function HistoryPanel({ items, className, onItemClick, activeId }: Props) {
   const [hoveredId, setHoveredId] = useState<number | string | null>(null);
 
   return (
@@ -42,7 +44,8 @@ export default function HistoryPanel({ items, className }: Props) {
         </div>
       </div>
 
-      <div className="hp-body">
+      <div className="hp-body" role="listbox" aria-label="Danh sách lịch sử"
+           aria-activedescendant={activeId ? `hp-item-${activeId}` : undefined}>
         {items.length === 0 ? (
           <div className="hp-empty">
             <div className="hp-empty-aura">
@@ -52,45 +55,62 @@ export default function HistoryPanel({ items, className }: Props) {
             <p className="hp-empty-sub">Bắt đầu tạo tóm tắt đầu tiên của bạn</p>
           </div>
         ) : (
-          <div className="hp-list">
-            {items.map((item, index) => (
-              <div
-                key={item.id}
-                onMouseEnter={() => setHoveredId(item.id)}
-                onMouseLeave={() => setHoveredId(null)}
-                className="group hp-item"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className="hp-item-outer" />
-                <div className="hp-item-inner" />
+          <div className="hp-list" role="presentation">
+            {items.map((item, index) => {
+              const isActive = activeId === item.id;
+              return (
+                <div
+                  key={item.id}
+                  id={`hp-item-${item.id}`}
+                  onMouseEnter={() => setHoveredId(item.id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  className={`group hp-item ${isActive ? "ring-1 ring-blue-400/50" : ""}`}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                  role="option"
+                  aria-selected={isActive}
+                >
+                  <div className="hp-item-outer" />
+                  <div className="hp-item-inner" />
 
-                <button className="hp-item-content">
-                  <div className="hp-item-icon-wrap">
-                    <div className={`hp-item-icon ${hoveredId === item.id ? "hp-item-icon--active" : ""}`}>
-                      <Sparkles
-                        className={`h-4 w-4 ${hoveredId === item.id ? "text-white" : "text-slate-500 dark:text-slate-400"}`}
-                      />
+                  <button
+                    className="hp-item-content"
+                    title={item.title}
+                    onClick={() => onItemClick?.(item.id)}               
+                    onKeyDown={(e) => {                                    
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onItemClick?.(item.id);
+                      }
+                    }}
+                    aria-current={isActive ? "true" : undefined}
+                  >
+                    <div className="hp-item-icon-wrap">
+                      <div className={`hp-item-icon ${hoveredId === item.id ? "hp-item-icon--active" : ""}`}>
+                        <Sparkles
+                          className={`h-4 w-4 ${hoveredId === item.id ? "text-white" : "text-slate-500 dark:text-slate-400"}`}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="hp-item-text">
-                    <h3 className="hp-item-title">{item.title}</h3>
-                    <div className="hp-item-time">
-                      <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-                      <p className="hp-item-time-text">{item.time}</p>
+                    <div className="hp-item-text">
+                      <h3 className="hp-item-title">{item.title}</h3>
+                      <div className="hp-item-time">
+                        <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+                        <p className="hp-item-time-text">{item.time}</p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className={`hp-item-arrow ${hoveredId === item.id ? "hp-item-arrow--show" : ""}`}>
-                    <div className="hp-item-arrow-pill">
-                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                    <div className={`hp-item-arrow ${hoveredId === item.id ? "hp-item-arrow--show" : ""}`}>
+                      <div className="hp-item-arrow-pill">
+                        <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              </div>
-            ))}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
