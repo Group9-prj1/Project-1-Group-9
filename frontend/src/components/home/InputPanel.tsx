@@ -1,14 +1,14 @@
-// src/components/home/InputPanel.tsx
 import { Sparkles, Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
+import ErrorPanel from "./ErrorPanel";
 import "../../styles/inputPanel.css";
 
 type Props = {
   originalText?: string;
   summaryText?: string;
-  readOnly?: boolean; 
+  readOnly?: boolean;
 };
 
 export default function InputPanel({
@@ -17,11 +17,32 @@ export default function InputPanel({
   readOnly = false,
 }: Props) {
   const [inputText, setInputText] = useState(originalText);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMsg, setModalMsg] = useState("");
   const maxChars = 2000;
 
   useEffect(() => {
     setInputText(originalText);
   }, [originalText]);
+
+  //  Xử lý khi tải file lên
+  const handleFileLoaded = (text: string) => {
+    if (text.length > maxChars) {
+      setInputText(text.slice(0, maxChars));
+      setNotice(
+        `⚠️ Nội dung tải lên dài ${text.length.toLocaleString()} ký tự. Đã tự động cắt xuống ${maxChars.toLocaleString()} ký tự.`
+      );
+    } else {
+      setInputText(text);
+      setNotice(null);
+    }
+  };
+
+  const handleUploadError = (message: string) => {
+    setModalMsg(message);
+    setModalOpen(true);
+  };
 
   return (
     <div className="ip-page">
@@ -34,7 +55,6 @@ export default function InputPanel({
         </div>
 
         <div className="ip-panel">
-          {/* Ô nhập văn bản gốc */}
           <div className="ip-wrap">
             <div className="ip-card">
               <label className="ip-label">
@@ -44,14 +64,25 @@ export default function InputPanel({
 
               <div className="ip-field">
                 <textarea
-                  className={`ip-textarea ${readOnly ? "opacity-90 cursor-not-allowed" : ""}`}
+                  className={`ip-textarea ${
+                    readOnly ? "opacity-90 cursor-not-allowed" : ""
+                  }`}
                   placeholder="Nhập hoặc dán văn bản ở đây…"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   maxLength={maxChars}
-                  readOnly={readOnly} // ✅ chỉ đọc khi xem chi tiết
+                  readOnly={readOnly}
                 />
               </div>
+
+              {notice && (
+                <div
+                  className="mt-3 flex items-center gap-2 rounded-lg border border-yellow-500/40 bg-yellow-50 px-4 py-3 text-black shadow-sm"
+                  role="alert"
+                >
+                  <span className="text-sm font-medium">{notice}</span>
+                </div>
+              )}
 
               <div className="ip-help">
                 <span className="ip-hint">
@@ -62,15 +93,21 @@ export default function InputPanel({
                 </span>
               </div>
 
-              {/* Các nút vẫn hiển thị, nhưng bị vô hiệu hóa khi readOnly */}
               <div className="ip-actions">
-                <UpLoadFile onFileLoaded={setInputText} disabled={readOnly} /> 
-                {/* ⬆ thêm prop disabled để khóa nút tải lên */}
+                <UpLoadFile
+                  onFileLoaded={handleFileLoaded}
+                  onError={handleUploadError}
+                  disabled={readOnly}
+                />
 
                 <button
                   type="button"
-                  className={`ip-primary ${readOnly ? "opacity-60 cursor-not-allowed" : ""}`}
-                  disabled={readOnly} // ⬆ cũng disable nút “Tóm tắt”
+                  className={`ip-primary ${
+                    readOnly || !inputText.trim()
+                      ? "opacity-60 cursor-not-allowed"
+                      : ""
+                  }`}
+                  disabled={readOnly || !inputText.trim()}
                 >
                   <Sparkles className="ip-icon" />
                   <span>Tóm tắt</span>
@@ -79,7 +116,6 @@ export default function InputPanel({
             </div>
           </div>
 
-          {/* Ô hiển thị kết quả */}
           <div className="ip-wrap">
             <div className="ip-card ip-card-output">
               <label className="ip-label">
@@ -106,6 +142,13 @@ export default function InputPanel({
             </div>
           </div>
         </div>
+
+        <ErrorPanel
+          open={modalOpen}
+          title="Lỗi tải tệp"
+          message={modalMsg}
+          onClose={() => setModalOpen(false)}
+        />
       </div>
     </div>
   );
