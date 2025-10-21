@@ -8,6 +8,14 @@ data = {
 }
 
 res = requests.post(url, json=data)
-
-print("Status:", res.status_code)
-print("Raw response:", res.text)
+try:
+    res.raise_for_status()
+    result = res.json()
+    print("Tóm tắt:", result["summary"])
+    print("Độ tin cậy trung bình:", result["avg_confidence"])
+    print("Điểm từng câu:")
+    for sent, score in result["sentence_scores"].items():
+        print(f" - {sent[:80]}... → {score:.4f}")
+except requests.exceptions.HTTPError:
+    print("Lỗi server:", res.status_code)
+    print("Chi tiết lỗi:", res.text)
