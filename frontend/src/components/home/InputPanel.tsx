@@ -1,4 +1,4 @@
-import { Sparkles, Download } from "lucide-react";
+import { Sparkles, Download, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import OutputPanel from "./OutputPanel";
@@ -12,6 +12,7 @@ type Props = {
   summaryText?: string;
   readOnly?: boolean;
 };
+
 
 export default function InputPanel({
   originalText = "",
@@ -29,6 +30,8 @@ export default function InputPanel({
 
 
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+
+  const [copied, setCopied] = useState(false);
 
   const maxChars = 2000;
 
@@ -55,6 +58,17 @@ export default function InputPanel({
 
   const canSummarize = !readOnly && Boolean(inputText.trim());
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(summaryText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Không thể sao chép nội dung. Vui lòng thử lại.");
+      setErrorOpen(true);
+    }
+  }
   
   return (
     <div className="ip-page">
@@ -137,7 +151,18 @@ export default function InputPanel({
                   <Download className="w-4 h-4" />
                   <span>Tải xuống</span>
                 </button>
+                <div className="ip-actions">
+                <button
+                  className="ip-copy"
+                  disabled={isHomePage || !summaryText?.trim()}       
+                  onClick={handleCopy}     
+                >
+                  <Copy className="w-4 h-4" />
+                  <span>Sao chép</span>
+                </button>
               </div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -155,6 +180,11 @@ export default function InputPanel({
           onError={handleUploadError}
         />
       </div>
+      {copied && (
+        <div className="fixed top-6 inset-x-0 mx-auto w-fit bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in-out z-[9999]">
+          Đã sao chép nội dung tóm tắt!
+        </div>
+      )}
     </div>
   );
 }
