@@ -119,7 +119,6 @@ export default function InputPanel({
             </div>
           </div>
 
-          {/* Right: Output */}
           <div className="ip-wrap">
             <div className="ip-card ip-card-output">
               <label className="ip-label">
@@ -132,7 +131,7 @@ export default function InputPanel({
               <div className="ip-actions">
                 <button
                   className="ip-download"
-                  disabled= {isHomePage}
+                  disabled= {isHomePage || !summaryText?.trim()}
                   onClick={() => setDownloadModalOpen(true)}
                 >
                   <Download className="w-4 h-4" />
@@ -151,6 +150,9 @@ export default function InputPanel({
         <DownloadButton
           isOpen={downloadModalOpen}
           onClose={() => setDownloadModalOpen(false)}
+          text={summaryText}
+          fileName="van_ban_tom_tat" 
+          onError={handleUploadError}
         />
       </div>
     </div>

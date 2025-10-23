@@ -8,6 +8,9 @@ type Format = "txt" | "docx";
 interface DownloadModalProps {
   isOpen: boolean;
   onClose: () => void;
+  text?: string;
+  fileName?: string;
+  onError?: (msg: string) => void;
 }
 
 const FORMAT_OPTIONS: Array<{
@@ -20,13 +23,44 @@ const FORMAT_OPTIONS: Array<{
   { label: "DOCX", value: "docx", description: "Microsoft Word document", icon: FileDown },
 ];
 
+function sanitizeName(name: string) {
+  return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, "").trim() || "document";
+}
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function downloadAsTxt(content: string, name: string) {
+  const BOM = "\uFEFF";
+  const blob = new Blob([BOM + content], { type: "text/plain;charset=utf-8" });
+  downloadBlob(blob, `${sanitizeName(name)}.txt`);
+}
+
+async function downloadAsDocx(content: string, name: string) {
+  const { Document, Packer, Paragraph } = await import("docx");
+  const paragraphs = (content || "").split(/\r?\n/).map((line) => new Paragraph(line));
+  const doc = new Document({ sections: [{ properties: {}, children: paragraphs }] });
+  const blob = await Packer.toBlob(doc);
+  downloadBlob(blob, `${sanitizeName(name)}.docx`);
+}
 
 export default function DownloadButton({
   isOpen,
   onClose,
+  text = "",
+  fileName = "document",
+  onError,
 }: DownloadModalProps) {
   const [selected, setSelected] = useState<Format | null>(null);
+  const safeName = sanitizeName(fileName);
 
   useEffect(() => {
     if (!isOpen) {
@@ -47,8 +81,31 @@ export default function DownloadButton({
 
   if (!isOpen) return null;
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  const handleDownload = async () => {
+    try {
+      if (!selected) return;
+      if (!text || !text.trim()) {
+        onError?.("Không có nội dung để tải xuống.");
+        return;
+      }
+      if (selected === "txt") {
+        await downloadAsTxt(text, safeName);
+      } else {
+        await downloadAsDocx(text, safeName);
+      }
+      onClose();
+    } catch (err) {
+      console.error(err);
+      onError?.("Không thể tạo tệp tải xuống. Vui lòng thử lại.");
+    }
+  };
+
   const node = (
-    <div className="dl-overlay" role="dialog" aria-modal="true">
+    <div className="dl-overlay" onClick={handleBackdropClick} role="dialog" aria-modal="true">
       <div className="dl-container" role="document">
         <div className="dl-header">
           <button type="button" className="dl-close" onClick={onClose} aria-label="Đóng">
@@ -98,6 +155,7 @@ export default function DownloadButton({
               type="button"
               className="dl-btn dl-btn-primary"
               disabled={!selected}
+              onClick={handleDownload}
             >
               <Download className="dl-icon" />
               <span>Tải xuống</span>
