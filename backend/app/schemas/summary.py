@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel , Field
 from typing import Optional
 from uuid import UUID
 import datetime as dt
@@ -16,3 +16,10 @@ class SummaryView(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PredictIn(BaseModel):
+    text: str = Field(..., min_length=1, max_length=2000)
+
+class PredictOut(BaseModel):
+    summary_text: str
+    id: Optional[str] = None
