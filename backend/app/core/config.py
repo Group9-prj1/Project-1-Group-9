@@ -23,5 +23,7 @@ class Settings(BaseSettings):
 
     FRONTEND_ORIGIN: str
     BACKEND_URL: str
+    
+    URL_PREDICT: str
 
 settings = Settings()

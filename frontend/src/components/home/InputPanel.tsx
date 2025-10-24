@@ -1,10 +1,11 @@
 import { Sparkles, Download, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
 import ErrorPanel from "./ErrorPanel";
 import DownloadButton from "./DownLoadButton";
+import { predictSummary } from "../../services/summaries";  
 import "../../styles/InputPanel.css";
 
 type Props = {
@@ -13,25 +14,22 @@ type Props = {
   readOnly?: boolean;
 };
 
-
 export default function InputPanel({
   originalText = "",
   summaryText = "",
   readOnly = false,
 }: Props) {
   const location = useLocation();
-  const isHomePage = location.pathname ==="/";
+  const isHomePage = location.pathname === "/";
+  const nav = useNavigate();                             
 
   const [inputText, setInputText] = useState(originalText);
   const [notice, setNotice] = useState<string | null>(null);
-
   const [errorOpen, setErrorOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-
-
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
-
   const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);              
 
   const maxChars = 2000;
 
@@ -56,7 +54,7 @@ export default function InputPanel({
     setErrorOpen(true);
   };
 
-  const canSummarize = !readOnly && Boolean(inputText.trim());
+  const canSummarize = !readOnly && Boolean(inputText.trim()) && !loading;
 
   const handleCopy = async () => {
     try {
@@ -68,8 +66,27 @@ export default function InputPanel({
       setErrorMsg("Không thể sao chép nội dung. Vui lòng thử lại.");
       setErrorOpen(true);
     }
-  }
-  
+  };
+
+  const handleSummarize = async () => {
+    if (!canSummarize) return;
+    setLoading(true);
+    setErrorMsg("");
+    try {
+
+      const res = await predictSummary({ text: inputText },undefined, {
+        timeoutMs: 15000,
+      });
+      // chuyển sang trang chi tiết/lịch sử của bản tóm tắt vừa tạo
+      nav(`/summaries/${res.id}`, { state: { summarizedJustNow: true } });
+    } catch (e: any) {
+      setErrorMsg(e?.message || "Không thể tóm tắt. Vui lòng thử lại.");
+      setErrorOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="ip-page">
       <div className="ip-container">
@@ -125,14 +142,16 @@ export default function InputPanel({
                   type="button"
                   className={`ip-primary ${!canSummarize ? "opacity-60 cursor-not-allowed" : ""}`}
                   disabled={!canSummarize}
+                  onClick={handleSummarize}                          // 👈 gắn handler
                 >
-                  <Sparkles className="ip-icon" />
-                  <span>Tóm tắt</span>
+                  <Sparkles className={`ip-icon ${loading ? "animate-spin" : ""}`} />
+                  <span>{loading ? "Đang tóm tắt…" : "Tóm tắt"}</span>
                 </button>
               </div>
             </div>
           </div>
 
+          {/* Right: Output */}
           <div className="ip-wrap">
             <div className="ip-card ip-card-output">
               <label className="ip-label">
@@ -145,27 +164,28 @@ export default function InputPanel({
               <div className="ip-actions">
                 <button
                   className="ip-download"
-                  disabled= {isHomePage || !summaryText?.trim()}
+                  disabled={isHomePage || !summaryText?.trim()}
                   onClick={() => setDownloadModalOpen(true)}
                 >
                   <Download className="w-4 h-4" />
                   <span>Tải xuống</span>
                 </button>
                 <div className="ip-actions">
-                <button
-                  className="ip-copy"
-                  disabled={isHomePage || !summaryText?.trim()}       
-                  onClick={handleCopy}     
-                >
-                  <Copy className="w-4 h-4" />
-                  <span>Sao chép</span>
-                </button>
-              </div>
+                  <button
+                    className="ip-copy"
+                    disabled={isHomePage || !summaryText?.trim()}
+                    onClick={handleCopy}
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span>Sao chép</span>
+                  </button>
+                </div>
               </div>
 
             </div>
           </div>
         </div>
+
         <ErrorPanel
           open={errorOpen}
           title="Lỗi"
@@ -176,10 +196,11 @@ export default function InputPanel({
           isOpen={downloadModalOpen}
           onClose={() => setDownloadModalOpen(false)}
           text={summaryText}
-          fileName="van_ban_tom_tat" 
+          fileName="van_ban_tom_tat"
           onError={handleUploadError}
         />
       </div>
+
       {copied && (
         <div className="fixed top-6 inset-x-0 mx-auto w-fit bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in-out z-[9999]">
           Đã sao chép nội dung tóm tắt!

@@ -6,9 +6,10 @@ export type SummaryView = {
   created_at: string;          
 };
 
+export type PredictIn = { text: string };
+
 const API_BASE = (import.meta.env.VITE_API_BASE ?? "http://localhost:8000").replace(/\/+$/,"");
 const SUMMARIES_URL = `${API_BASE}/summaries`;
-
 
 function authHeaders(token?: string) {
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -46,4 +47,42 @@ export async function getSummaryById(id: string, token?: string): Promise<Summar
     credentials: "include",
   });
   return parseOrThrow(res) as Promise<SummaryView>;
+}
+
+export async function predictSummary(
+  input: PredictIn,
+  token?: string,
+  opts?: { timeoutMs?: number }
+): Promise<SummaryView> {
+  const text = input?.text?.trim();
+  if (!text) throw new Error("Văn bản trống");
+
+  const timeoutMs = opts?.timeoutMs ?? 15000;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(
+      `${SUMMARIES_URL}/predict`,
+      {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          ...authHeaders(token),
+        },
+        body: JSON.stringify({ text }),
+        credentials: "include",
+        signal: ctrl.signal,
+      }
+    );
+    return await parseOrThrow(res) as SummaryView;
+  } catch (e: any) {
+    if (e?.name === "AbortError") {
+      throw new Error("Hết thời gian chờ phản hồi (timeout). Thử lại sau.");
+    }
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 }
