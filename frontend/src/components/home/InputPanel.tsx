@@ -1,9 +1,11 @@
-import { Sparkles, Download } from "lucide-react";
+import { Sparkles, Download, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
 import ErrorPanel from "./ErrorPanel";
-import "../../styles/inputPanel.css";
+import DownloadButton from "./DownLoadButton";
+import "../../styles/InputPanel.css";
 
 type Props = {
   originalText?: string;
@@ -11,22 +13,32 @@ type Props = {
   readOnly?: boolean;
 };
 
+
 export default function InputPanel({
   originalText = "",
   summaryText = "",
   readOnly = false,
 }: Props) {
+  const location = useLocation();
+  const isHomePage = location.pathname ==="/";
+
   const [inputText, setInputText] = useState(originalText);
   const [notice, setNotice] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMsg, setModalMsg] = useState("");
+
+  const [errorOpen, setErrorOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+
+  const [copied, setCopied] = useState(false);
+
   const maxChars = 2000;
 
   useEffect(() => {
     setInputText(originalText);
   }, [originalText]);
 
-  //  Xử lý khi tải file lên
   const handleFileLoaded = (text: string) => {
     if (text.length > maxChars) {
       setInputText(text.slice(0, maxChars));
@@ -40,13 +52,28 @@ export default function InputPanel({
   };
 
   const handleUploadError = (message: string) => {
-    setModalMsg(message);
-    setModalOpen(true);
+    setErrorMsg(message);
+    setErrorOpen(true);
   };
 
+  const canSummarize = !readOnly && Boolean(inputText.trim());
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(summaryText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Không thể sao chép nội dung. Vui lòng thử lại.");
+      setErrorOpen(true);
+    }
+  }
+  
   return (
     <div className="ip-page">
       <div className="ip-container">
+        {/* Header */}
         <div className="ip-hero">
           <div className="ip-hero-row">
             <Sparkles className="ip-hero-icon" />
@@ -54,7 +81,9 @@ export default function InputPanel({
           </div>
         </div>
 
+        {/* Body */}
         <div className="ip-panel">
+          {/* Left: Input */}
           <div className="ip-wrap">
             <div className="ip-card">
               <label className="ip-label">
@@ -64,9 +93,7 @@ export default function InputPanel({
 
               <div className="ip-field">
                 <textarea
-                  className={`ip-textarea ${
-                    readOnly ? "opacity-90 cursor-not-allowed" : ""
-                  }`}
+                  className={`ip-textarea ${readOnly ? "opacity-90 cursor-not-allowed" : ""}`}
                   placeholder="Nhập hoặc dán văn bản ở đây…"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
@@ -85,29 +112,19 @@ export default function InputPanel({
               )}
 
               <div className="ip-help">
-                <span className="ip-hint">
-                  💡 Tối đa {maxChars.toLocaleString()} ký tự
-                </span>
+                <span className="ip-hint">💡 Tối đa {maxChars.toLocaleString()} ký tự</span>
                 <span className="ip-count">
                   {inputText.length.toLocaleString()} / {maxChars.toLocaleString()}
                 </span>
               </div>
 
               <div className="ip-actions">
-                <UpLoadFile
-                  onFileLoaded={handleFileLoaded}
-                  onError={handleUploadError}
-                  disabled={readOnly}
-                />
+                <UpLoadFile onFileLoaded={handleFileLoaded} onError={handleUploadError} disabled={readOnly} />
 
                 <button
                   type="button"
-                  className={`ip-primary ${
-                    readOnly || !inputText.trim()
-                      ? "opacity-60 cursor-not-allowed"
-                      : ""
-                  }`}
-                  disabled={readOnly || !inputText.trim()}
+                  className={`ip-primary ${!canSummarize ? "opacity-60 cursor-not-allowed" : ""}`}
+                  disabled={!canSummarize}
                 >
                   <Sparkles className="ip-icon" />
                   <span>Tóm tắt</span>
@@ -128,28 +145,46 @@ export default function InputPanel({
               <div className="ip-actions">
                 <button
                   className="ip-download"
-                  disabled={!summaryText?.trim()}
-                  title={
-                    summaryText?.trim()
-                      ? "Tải kết quả tóm tắt"
-                      : "Chưa có kết quả để tải"
-                  }
+                  disabled= {isHomePage || !summaryText?.trim()}
+                  onClick={() => setDownloadModalOpen(true)}
                 >
                   <Download className="w-4 h-4" />
                   <span>Tải xuống</span>
                 </button>
+                <div className="ip-actions">
+                <button
+                  className="ip-copy"
+                  disabled={isHomePage || !summaryText?.trim()}       
+                  onClick={handleCopy}     
+                >
+                  <Copy className="w-4 h-4" />
+                  <span>Sao chép</span>
+                </button>
               </div>
+              </div>
+
             </div>
           </div>
         </div>
-
         <ErrorPanel
-          open={modalOpen}
-          title="Lỗi tải tệp"
-          message={modalMsg}
-          onClose={() => setModalOpen(false)}
+          open={errorOpen}
+          title="Lỗi"
+          message={errorMsg}
+          onClose={() => setErrorOpen(false)}
+        />
+        <DownloadButton
+          isOpen={downloadModalOpen}
+          onClose={() => setDownloadModalOpen(false)}
+          text={summaryText}
+          fileName="van_ban_tom_tat" 
+          onError={handleUploadError}
         />
       </div>
+      {copied && (
+        <div className="fixed top-6 inset-x-0 mx-auto w-fit bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in-out z-[9999]">
+          Đã sao chép nội dung tóm tắt!
+        </div>
+      )}
     </div>
   );
 }

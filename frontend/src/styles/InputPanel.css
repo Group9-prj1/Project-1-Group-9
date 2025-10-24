@@ -83,5 +83,35 @@
            mr-auto
            mt-12;
   }
+  .ip-copy {
+    @apply inline-flex items-center gap-2 px-5 py-3
+           rounded-xl border-2 border-gray-200 bg-white
+           text-sm font-semibold text-gray-700 shadow-md
+           transition-all duration-300
+           hover:shadow-lg hover:scale-105 hover:-translate-y-0.5
+           active:scale-100 active:translate-y-0
+           mr-auto
+           mt-12;
+  }
+
+  @keyframes fade-in-out {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    10%, 90% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  .animate-fade-in-out {
+    animation: fade-in-out 2s ease forwards;
+  }
+
 }
 
