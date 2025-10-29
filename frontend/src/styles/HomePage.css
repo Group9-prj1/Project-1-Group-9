@@ -8,7 +8,6 @@
     @apply fixed left-2 top-24 z-40 inline-flex items-center gap-2 
            rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow 
            hover:bg-slate-50 active:scale-95 
-           dark:border-slate-800 dark:bg-slate-900;
   }
 
   .hp-sidebar {
