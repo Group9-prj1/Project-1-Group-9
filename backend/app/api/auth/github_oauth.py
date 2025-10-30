@@ -83,18 +83,22 @@ async def github_callback(
 ):
     if not code or not state:
         # raise HTTPException(400, "Thiếu code/state")
-        raise HTTPException(400 ,"Đăng nhập thất bại ")
+        url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+        return RedirectResponse(url, status_code=302)
 
     oauth_map: dict = request.session.get("oauth_map", {})
     entry = oauth_map.get(state)
     if entry is None:
         # raise HTTPException(400, "State không hợp lệ/expired")
-        raise HTTPException(400 ,"Đăng nhập thất bại ")
+        url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+        return RedirectResponse(url, status_code=302)
 
     verifier = entry.get("verifier") if USE_PKCE else None
     if USE_PKCE and not verifier:
         # raise HTTPException(400, "Thiếu code_verifier (session/PKCE)")
-        raise HTTPException(400 ,"Đăng nhập thất bại ")
+        # đăng nhập thất bại trả về trang login
+        url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+        return RedirectResponse(url, status_code=302)
 
     token_payload = {
         "client_id": settings.GITHUB_CLIENT_ID,
@@ -112,12 +116,16 @@ async def github_callback(
             headers={"Accept": "application/json"},
         )
         if token_res.status_code != 200:
-            raise HTTPException(400, f"Đổi token thất bại: {token_res.text}")
+            # raise HTTPException(400, f"Đổi token thất bại: {token_res.text}")
+            url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+            return RedirectResponse(url, status_code=302)
 
         token_json = token_res.json()
         access_token = token_json.get("access_token")
         if not access_token:
-            raise HTTPException(400, f"Thiếu access_token từ GitHub: {token_json}")
+            # raise HTTPException(400, f"Thiếu access_token từ GitHub: {token_json}")
+            url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+            return RedirectResponse(url, status_code=302)
 
         ui_res = await client.get(
             GITHUB_USER_URL,
@@ -145,7 +153,8 @@ async def github_callback(
     full_name = ui.get("name") or login_name
     avatar_url = ui.get("avatar_url")
     if not github_id:
-        raise HTTPException(400, "Thiếu id (provider_user_id) từ GitHub")
+        url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+        return RedirectResponse(url, status_code=302)
 
     provider_val = getattr(Provider.GITHUB, "value", Provider.GITHUB)
 

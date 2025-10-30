@@ -79,18 +79,21 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
 
     if not code or not state:
         # raise HTTPException(400, "Thiếu code hoặc state")
-        raise HTTPException(400 ,"Đăng nhập thất bại ")
+        url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+        return RedirectResponse(url, status_code=302)
 
     sess = request.session.get("oauth")
     print("SESSION OAUTH:", sess)
     if not sess or sess.get("state") != state:
         # raise HTTPException(400, "State không hợp lệ (không khớp session)")
-        raise HTTPException(400 ,"Đăng nhập thất bại ")
+        url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+        return RedirectResponse(url, status_code=302)
 
     verifier = sess.get("verifier") if USE_PKCE else None
     if USE_PKCE and not verifier:
         # raise HTTPException(400, "Thiếu code_verifier (session/PKCE)")
-        raise HTTPException(400 ,"Đăng nhập thất bại ")
+        url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+        return RedirectResponse(url, status_code=302)
 
     #Lấy thông tin user
     token_payload = {
@@ -117,13 +120,15 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
 
         if token_res.status_code != 200:
             # raise HTTPException(400, f"Đổi token thất bại: {token_res.text}")
-            raise HTTPException(400 ,"Đăng nhập thất bại ")
+            url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+            return RedirectResponse(url, status_code=302)
 
         token_json = token_res.json()
         access_token = token_json.get("access_token")
         if not access_token:
             # raise HTTPException(400, f"Thiếu access_token từ Google: {token_json}")
-            raise HTTPException(400 ,"Đăng nhập thất bại ")
+            url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+            return RedirectResponse(url, status_code=302)
 
         ui_res = await client.get(
             GOOGLE_USERINFO_URL,
@@ -133,7 +138,8 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         print("USERINFO RES BODY:", ui_res.text)
         if ui_res.status_code != 200:
             # raise HTTPException(400, f"Lấy userinfo thất bại: {ui_res.text}")
-            raise HTTPException(400 ,"Đăng nhập thất bại ")
+            url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+            return RedirectResponse(url, status_code=302)
         ui = ui_res.json()
 
     google_sub = ui.get("sub")
@@ -141,9 +147,11 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
     full_name = ui.get("name")
     avatar = ui.get("picture")
     if not google_sub:
-        raise HTTPException(400, "Thiếu sub (provider_user_id)")
+        url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+        return RedirectResponse(url, status_code=302)
     if not email:
-        raise HTTPException(400, "Google không cung cấp email cho tài khoản này")
+        url = f"{settings.FRONTEND_ORIGIN}/login?error=failed"
+        return RedirectResponse(url, status_code=302)
 
     try:
         identity = (

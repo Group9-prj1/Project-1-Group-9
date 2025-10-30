@@ -1,6 +1,8 @@
-// LoginPage.tsx
 import { Github, Chrome, Sparkles } from "lucide-react";
+import ErrorPanel from "../components/home/ErrorPanel";
+import { useLocation } from "react-router-dom";
 import "../styles/login.css"
+import { useEffect, useState } from "react";
 
 const GoogleLogin = () => {
   window.location.href = `${import.meta.env.VITE_API_BASE}/auth/google/login`
@@ -11,6 +13,29 @@ const GitHubLogin = () => {
 }
 
 export default function LoginPage() {
+
+  const { search } = useLocation();
+  const [errorOpen, setErrorOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const error = params.get("error");
+
+    if (error) {
+      switch (error) {
+        case "failed":
+          setErrorMsg("Đăng nhập thất bại. Vui lòng thử lại!");
+          break;
+        case "oauth_failed":
+          setErrorMsg("Lỗi xác thực OAuth. Vui lòng đăng nhập lại.");
+          break;
+        default:
+          setErrorMsg("Đăng nhập thất bại. Vui lòng thử lại sau.");
+      }
+      setErrorOpen(true);
+    }
+  }, [search]);
   return (
     <div className="login-page">
       <div className="animated-background">
@@ -70,6 +95,12 @@ export default function LoginPage() {
         </div>
 
       </div>
+      <ErrorPanel
+        open={errorOpen}
+        title="Đăng nhập thất bại"
+        message={errorMsg}
+        onClose={() => setErrorOpen(false)}
+      />
     </div>
   );
 }
