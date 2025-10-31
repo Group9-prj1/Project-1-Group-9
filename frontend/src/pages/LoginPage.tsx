@@ -79,7 +79,6 @@ export default function LoginPage() {
         ))}
       </div>
 
-      {/* Thêm mới: Lightning container */}
       <div className="lightning-container">
         {[...Array(3)].map((_, i) => (
           <Zap
@@ -96,32 +95,57 @@ export default function LoginPage() {
 
       <div className="login-card-wrapper">
         <div className="card-glow" />
+        <div className="card-glow-secondary" />
         
         <div className="login-card">
+          <div className="card-inner-glow" />
+          
           <div className="login-header">
             <div className="icon-wrapper">
+              <div className="icon-glow" />
               <Sparkles className="header-icon" />
             </div>
             <h1 className="login-title">Chào Mừng</h1>
             <p className="login-subtitle">
               Chọn phương thức đăng nhập của bạn
             </p>
+            <div className="title-underline" />
           </div>
 
           <div className="login-buttons">
-            <button onClick={GoogleLogin} className="login-btn google-btn">
+            {/* Thêm class "group" và các elements mới */}
+            <button onClick={GoogleLogin} className="login-btn google-btn group">
               <div className="btn-shine" />
+              {/* Thêm mới: Button glow effect */}
+              <div className="btn-glow" />
               <div className="btn-content">
-                <Chrome className="btn-icon" />
+                {/* Thêm mới: Icon wrapper */}
+                <div className="btn-icon-wrapper">
+                  <Chrome className="btn-icon" />
+                </div>
                 <span>Tiếp tục với Google</span>
+              </div>
+              {/* Thêm mới: Button particles */}
+              <div className="btn-particles">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="btn-particle" />
+                ))}
               </div>
             </button>
 
-            <button onClick={GitHubLogin} className="login-btn github-btn">
+            <button onClick={GitHubLogin} className="login-btn github-btn group">
               <div className="btn-shine" />
+              <div className="btn-glow" />
               <div className="btn-content">
-                <Github className="btn-icon" />
+                <div className="btn-icon-wrapper">
+                  <Github className="btn-icon" />
+                </div>
                 <span>Tiếp tục với GitHub</span>
+              </div>
+              <div className="btn-particles">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="btn-particle" />
+                ))}
               </div>
             </button>
           </div>
