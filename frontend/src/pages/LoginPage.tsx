@@ -1,4 +1,4 @@
-import { Github, Chrome, Sparkles } from "lucide-react";
+import { Github, Chrome, Sparkles, Star, Zap } from "lucide-react";
 import ErrorPanel from "../components/home/ErrorPanel";
 import { useLocation } from "react-router-dom";
 import "../styles/login.css"
@@ -36,6 +36,7 @@ export default function LoginPage() {
       setErrorOpen(true);
     }
   }, [search]);
+
   return (
     <div className="login-page">
       <div className="animated-background">
@@ -49,7 +50,7 @@ export default function LoginPage() {
       <div className="grid-pattern" />
       
       <div className="particles-container">
-        {[...Array(20)].map((_, i) => (
+        {[...Array(30)].map((_, i) => (
           <div
             key={i}
             className="particle"
@@ -62,6 +63,37 @@ export default function LoginPage() {
           />
         ))}
       </div>
+
+      <div className="stars-container">
+        {[...Array(15)].map((_, i) => (
+          <Star
+            key={i}
+            className="floating-star"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              fontSize: `${12 + Math.random() * 8}px`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Thêm mới: Lightning container */}
+      <div className="lightning-container">
+        {[...Array(3)].map((_, i) => (
+          <Zap
+            key={i}
+            className="floating-lightning"
+            style={{
+              left: `${20 + i * 30}%`,
+              top: `${10 + Math.random() * 20}%`,
+              animationDelay: `${i * 2}s`
+            }}
+          />
+        ))}
+      </div>
+
       <div className="login-card-wrapper">
         <div className="card-glow" />
         
@@ -75,6 +107,7 @@ export default function LoginPage() {
               Chọn phương thức đăng nhập của bạn
             </p>
           </div>
+
           <div className="login-buttons">
             <button onClick={GoogleLogin} className="login-btn google-btn">
               <div className="btn-shine" />
@@ -93,8 +126,8 @@ export default function LoginPage() {
             </button>
           </div>
         </div>
-
       </div>
+
       <ErrorPanel
         open={errorOpen}
         title="Đăng nhập thất bại"
