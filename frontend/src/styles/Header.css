@@ -5,7 +5,11 @@
 @layer components {
   .app-header {
     @apply relative border-b border-gray-200 backdrop-blur-xl bg-gradient-to-r from-white/95 via-blue-50/95 to-white/95 shadow-md;
+    @apply relative z-50 overflow-visible;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  }
+   .app-header.fixed {
+    @apply z-[1000];
   }
 
   .header-glow {
@@ -49,14 +53,21 @@
   .nav-right { @apply flex items-center space-x-4; }
 
   .account-btn {
-    @apply relative flex items-center space-x-2 px-4 py-2 rounded-lg overflow-hidden
-           text-gray-700 hover:text-gray-900 transition-all duration-300
-           border border-gray-200 hover:border-purple-300 bg-white shadow-sm;
+  @apply relative flex items-center space-x-2 px-5 py-2.5 rounded-2xl overflow-hidden
+         font-medium shadow-lg hover:shadow-2xl transition-all duration-300
+         text-white hover:scale-105;
   }
+
   .btn-bg {
-    @apply absolute inset-0 bg-gradient-to-r from-blue-500/0 via-purple-500/0 to-pink-500/0 transition-all duration-300 -z-10;
+    @apply absolute inset-0 transition-all duration-300;
+    @apply bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600;
+    z-index: -1;
   }
-  .account-btn:hover .btn-bg { @apply from-blue-500/10 via-purple-500/10 to-pink-500/10; }
+
+  .account-btn:hover .btn-bg { 
+    @apply scale-110;
+    @apply bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500;
+  }
   .account-btn:hover { @apply shadow-lg; }
 
   .menu-btn {
@@ -137,13 +148,13 @@
     @apply opacity-100;
     animation: pulse 2s ease-in-out infinite;
   }
-
   /* Dropdown Menu */
   .dropdown-menu {
     @apply absolute top-full right-0 mt-2 w-48
            bg-white/95 backdrop-blur-sm rounded-xl shadow-xl
            border border-gray-200/50 overflow-hidden z-50;
     animation: slideDown 0.2s ease-out;
+    z-index: 9999;
   }
 
   .dropdown-item {
@@ -156,6 +167,8 @@
   .logout-btn:hover {
     @apply pl-5;
   }
+
+
 }
 
 @keyframes slideDown {
