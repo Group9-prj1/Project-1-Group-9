@@ -5,7 +5,7 @@ import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
 import ErrorPanel from "./ErrorPanel";
 import DownloadButton from "./DownLoadButton";
-import { cleanInputText, predictSummary, hasEmoji } from "../../services/summaries";  
+import { cleanInputText, predictSummary, hasEmoji,removeEmojis } from "../../services/summaries";  
 import "../../styles/InputPanel.css";
 
 type Props = {
@@ -74,7 +74,8 @@ export default function InputPanel({
     setErrorMsg("");
     try {
       const cleanedText = cleanInputText(inputText);
-      const res = await predictSummary({ text: cleanedText }, undefined, {
+      const textInput = removeEmojis(cleanedText);
+      const res = await predictSummary({ text: textInput }, undefined, {
         timeoutMs: 15000,
       });
       // chuyển sang trang chi tiết/lịch sử của bản tóm tắt vừa tạo
@@ -84,8 +85,7 @@ export default function InputPanel({
       setErrorOpen(true);
     } finally {
       setLoading(false);
-    }
-    
+    } 
   };
   const handlePasteBlockEmoji = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
         const raw = e.clipboardData.getData("text") || "";
@@ -94,7 +94,10 @@ export default function InputPanel({
           setErrorMsg("Không cho phép dán emoji/icon vào nội dung.");
           setErrorOpen(true);
         }
-      };
+  };
+
+
+
   return (
     <div className="ip-page">
       <div className="ip-container">

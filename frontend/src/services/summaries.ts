@@ -93,8 +93,14 @@ export function cleanInputText(text: string): string {
 }
 
 const EMOJI_RE =
-  /[\p{Extended_Pictographic}\uFE0F\u200D\u{1F3FB}-\u{1F3FF}]/u;
+  /[\p{Extended_Pictographic}\uFE0F\u200D\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}]/gu;
+const INVISIBLES_RE = /[\u200B-\u200D\u2060\u00A0\uFEFF]/g;
 
 export function hasEmoji(s: string) {
   return EMOJI_RE.test(s);
+}
+
+//  xử lý văn bản nếu có emoji xóa bỏ emoji
+export function removeEmojis(text: string): string {
+  return text.replace(EMOJI_RE, '').replace(INVISIBLES_RE, '');
 }
