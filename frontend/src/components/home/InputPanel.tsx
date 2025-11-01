@@ -5,7 +5,7 @@ import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
 import ErrorPanel from "./ErrorPanel";
 import DownloadButton from "./DownLoadButton";
-import { predictSummary } from "../../services/summaries";  
+import { cleanInputText, predictSummary, hasEmoji } from "../../services/summaries";  
 import "../../styles/InputPanel.css";
 
 type Props = {
@@ -73,8 +73,8 @@ export default function InputPanel({
     setLoading(true);
     setErrorMsg("");
     try {
-
-      const res = await predictSummary({ text: inputText },undefined, {
+      const cleanedText = cleanInputText(inputText);
+      const res = await predictSummary({ text: cleanedText }, undefined, {
         timeoutMs: 15000,
       });
       // chuyển sang trang chi tiết/lịch sử của bản tóm tắt vừa tạo
@@ -85,8 +85,16 @@ export default function InputPanel({
     } finally {
       setLoading(false);
     }
+    
   };
-
+  const handlePasteBlockEmoji = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const raw = e.clipboardData.getData("text") || "";
+        if (hasEmoji(raw)) {
+          e.preventDefault();
+          setErrorMsg("Không cho phép dán emoji/icon vào nội dung.");
+          setErrorOpen(true);
+        }
+      };
   return (
     <div className="ip-page">
       <div className="ip-container">
@@ -114,6 +122,7 @@ export default function InputPanel({
                   placeholder="Nhập hoặc dán văn bản ở đây…"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
+                  onPaste={handlePasteBlockEmoji}
                   maxLength={maxChars}
                   readOnly={readOnly}
                 />

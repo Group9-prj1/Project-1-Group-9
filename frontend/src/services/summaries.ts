@@ -86,3 +86,15 @@ export async function predictSummary(
     clearTimeout(timer);
   }
 }
+
+// loại bỏ khoảng trắng thừa trong văn tải lên và nhập liệu
+export function cleanInputText(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+const EMOJI_RE =
+  /[\p{Extended_Pictographic}\uFE0F\u200D\u{1F3FB}-\u{1F3FF}]/u;
+
+export function hasEmoji(s: string) {
+  return EMOJI_RE.test(s);
+}
