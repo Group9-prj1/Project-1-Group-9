@@ -11,10 +11,30 @@
   .ip-container { @apply max-w-7xl mx-auto; }
 
   .ip-hero { @apply text-center mb-4; }
-  .ip-hero-row { @apply inline-flex items-center gap-2 mb-3; }
-  .ip-hero-icon { @apply w-8 h-8 text-indigo-600; }
-  .ip-title { @apply text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent; }
-  .ip-subtitle { @apply text-gray-600 text-sm; }
+  .ip-hero-row { @apply inline-flex items-center gap-3 mb-4 relative; }
+  .ip-hero-row::before {
+    content: '';
+    @apply absolute inset-0 blur-2xl opacity-30;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(168, 85, 247, 0.5));
+  }
+  .ip-hero-icon { 
+    @apply w-10 h-10 text-indigo-600 relative z-10;
+    filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4));
+    animation: sparkleFloat 2s ease-in-out infinite;
+  }
+  .ip-title { 
+    @apply text-4xl font-extrabold relative z-10;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 3s ease infinite;
+    filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.3));
+  }
+  .ip-subtitle { 
+    @apply text-gray-600 text-base font-medium;
+  }
 
   .ip-panel { @apply flex flex-col lg:flex-row justify-between gap-6; }
   .ip-wrap { @apply w-full lg:w-1/2 flex-shrink-0; }
@@ -112,6 +132,24 @@
   .animate-fade-in-out {
     animation: fade-in-out 2s ease forwards;
   }
-
+  @keyframes sparkleFloat {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    25% {
+      transform: translateY(-4px) rotate(-5deg);
+    }
+    75% {
+      transform: translateY(4px) rotate(5deg);
+    }
+  }
+  @keyframes gradientShift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
 }
 
