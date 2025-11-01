@@ -100,9 +100,6 @@ export default function Header() {
                 {showDropdown && (
                   <div className="dropdown-menu">
                     <div className="dropdown-header">
-                      <p className="dropdown-user-name">
-                        {user.full_name || 'Người dùng'}
-                      </p>
                       <p className="dropdown-user-email">{user.email}</p>
                     </div>
                     <button
