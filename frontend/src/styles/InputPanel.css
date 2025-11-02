@@ -43,6 +43,20 @@
     @apply relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border p-8
            transition-all duration-500 hover:shadow-2xl hover:bg-white/90;
     border-color: rgba(255,255,255,.5);
+    box-shadow: 0 20px 60px rgba(99, 102, 241, 0.12), 0 0 1px rgba(0, 0, 0, 0.05);
+  }
+  .ip-card::before {
+    content: '';
+    @apply absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-500 pointer-events-none;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+    z-index: 0;
+  }
+  .ip-card:hover {
+    @apply bg-white shadow-2xl transform -translate-y-1;
+    box-shadow: 0 25px 70px rgba(99, 102, 241, 0.18), 0 0 1px rgba(0, 0, 0, 0.1);
+  }
+  .ip-card:hover::before {
+    @apply opacity-100;
   }
   .ip-card-output { @apply bg-gradient-to-br from-white/80 to-indigo-50/30; }
 
@@ -92,6 +106,41 @@
            active:scale-100 active:translate-y-0
            focus:ring-4 focus:ring-indigo-300/50
            disabled:opacity-50 disabled:cursor-not-allowed;
+    background-size: 200% auto;
+  }
+  .ip-primary::before {
+  content: '';
+  @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+  }
+
+  .ip-primary::after {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3), transparent 70%);
+  }
+
+  .ip-primary:hover:not(:disabled) {
+    @apply shadow-2xl scale-105 -translate-y-1;
+    background-position: 100% center;
+    box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4), 0 0 20px rgba(168, 85, 247, 0.3);
+  }
+
+  .ip-primary:hover:not(:disabled)::before {
+    @apply opacity-100;
+  }
+
+  .ip-primary:hover:not(:disabled)::after {
+    @apply opacity-100;
+    animation: shimmerButton 1.5s ease-in-out infinite;
+  }
+
+  .ip-primary:hover:not(:disabled) .ip-icon {
+    @apply rotate-12 scale-110;
+  }
+
+  .ip-primary:active:not(:disabled) {
+    @apply scale-100 translate-y-0;
   }
   .ip-download {
     @apply inline-flex items-center gap-2 px-5 py-3
@@ -113,7 +162,34 @@
            mr-auto
            mt-12;
   }
+  .ip-download::before,
+  .ip-copy::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+  }
 
+  .ip-download:hover:not(:disabled),
+  .ip-copy:hover:not(:disabled) {
+    @apply shadow-xl scale-105 -translate-y-1 border-indigo-300/60 text-indigo-700;
+    box-shadow: 0 12px 32px rgba(99, 102, 241, 0.15);
+  }
+
+  .ip-download:hover:not(:disabled)::before,
+  .ip-copy:hover:not(:disabled)::before {
+    @apply opacity-100;
+  }
+
+  .ip-download:hover:not(:disabled) .ip-icon,
+  .ip-copy:hover:not(:disabled) .ip-icon {
+    @apply scale-110;
+    animation: bounceIcon 0.5s ease-in-out;
+  }
+
+  .ip-download:active:not(:disabled),
+  .ip-copy:active:not(:disabled) {
+    @apply scale-100 translate-y-0;
+  }
   @keyframes fade-in-out {
     0% {
       opacity: 0;
@@ -153,3 +229,20 @@
   }
 }
 
+@keyframes shimmerButton {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+@keyframes bounceIcon {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    transform: scale(1.2) translateY(-2px);
+  }
+}

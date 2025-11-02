@@ -154,7 +154,7 @@ export default function InputPanel({
                   type="button"
                   className={`ip-primary ${!canSummarize ? "opacity-60 cursor-not-allowed" : ""}`}
                   disabled={!canSummarize}
-                  onClick={handleSummarize}                          // 👈 gắn handler
+                  onClick={handleSummarize}
                 >
                   <Sparkles className={`ip-icon ${loading ? "animate-spin" : ""}`} />
                   <span>{loading ? "Đang tóm tắt…" : "Tóm tắt"}</span>
