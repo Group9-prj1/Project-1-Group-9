@@ -24,13 +24,18 @@ export default function InputPanel({
   const nav = useNavigate();                             
 
   const [inputText, setInputText] = useState(originalText);
+  
   const [notice, setNotice] = useState<string | null>(null);
   const [errorOpen, setErrorOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);              
 
+  
   const maxChars = 2000;
 
   useEffect(() => {
@@ -210,12 +215,21 @@ export default function InputPanel({
           text={summaryText}
           fileName="van_ban_tom_tat"
           onError={handleUploadError}
+          onSuccess={() =>{ 
+            setDownloaded(true)
+            setTimeout(() => setDownloaded(false), 2000);  
+          }}
         />
       </div>
 
       {copied && (
         <div className="fixed top-6 inset-x-0 mx-auto w-fit bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in-out z-[9999]">
           Đã sao chép nội dung tóm tắt!
+        </div>
+      )}
+      {downloaded && (
+        <div className="fixed top-6 inset-x-0 mx-auto w-fit bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in-out z-[9999]">
+          Bắt đầu tải xuống tóm tắt...
         </div>
       )}
     </div>

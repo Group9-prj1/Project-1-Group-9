@@ -49,6 +49,7 @@
     content: '';
     @apply absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-500 pointer-events-none;
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+    pointer-events: none;
     z-index: 0;
   }
   .ip-card:hover {
@@ -59,7 +60,20 @@
     @apply opacity-100;
   }
   .ip-card-output { @apply bg-gradient-to-br from-white/80 to-indigo-50/30; }
-
+  .ip-card > * {
+    position: relative;
+    z-index: 1; 
+  }
+  .ip-card::before {
+    z-index: 0;
+    pointer-events: none;
+  }
+  .ip-actions button,
+  .ip-actions label {
+    position: relative;
+    z-index: 10;
+    cursor: pointer;
+  }
   .ip-label { @apply flex items-center gap-3 mb-5 text-lg font-bold text-gray-800 tracking-tight; }
   .ip-label-dot {
     @apply w-2 h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500;
@@ -79,9 +93,15 @@
            px-5 py-4 text-base leading-relaxed text-gray-900 placeholder:text-gray-400
            shadow-inner outline-none transition-all duration-300 ease-out
            focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 focus:bg-white;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
   }
-  .ip-textarea:hover { @apply border-gray-300 shadow-md; }
 
+
+  .ip-textarea:hover,
+  .ip-textarea:focus {
+    cursor: text;
+    caret-color: #4f46e5;
+  }
   .ip-output-area {
     @apply w-full min-h-[380px] rounded-2xl
            border-2 border-dashed border-indigo-200/60
