@@ -74,10 +74,13 @@ def predict_and_save(
         raise HTTPException(status_code=504, detail="Prediction service timeout")
     except requests.RequestException as e:
         raise HTTPException(status_code=502, detail=f"Prediction service error: {e}")
-
+    if resp.status_code == 404:
+         raise HTTPException(
+            status_code=502,
+            detail="Dịch vụ chưa sẵn sàng"
+        )
     if not resp.ok:
         raise HTTPException(status_code=502, detail=f"Upstream {resp.status_code}: {resp.text}")
-
     try:
         data = resp.json()
     except ValueError:
