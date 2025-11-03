@@ -122,7 +122,11 @@ export default function HomePage() {
       </aside>
 
       <main>
-        <InputPanel/>
+        <InputPanel
+          originalText={currentSummary?.original_text || ""}
+          summaryText={currentSummary?.summary_text || ""}
+          readOnly={!!currentSummary}
+        />
 
         {detailLoading && (
           <div style={{ textAlign: "center", marginTop: "1rem", color: "#666" }}>

@@ -11,6 +11,7 @@ interface DownloadModalProps {
   text?: string;
   fileName?: string;
   onError?: (msg: string) => void;
+  onSuccess?: () => void;
 }
 
 const FORMAT_OPTIONS: Array<{
@@ -58,6 +59,7 @@ export default function DownloadButton({
   text = "",
   fileName = "document",
   onError,
+  onSuccess,
 }: DownloadModalProps) {
   const [selected, setSelected] = useState<Format | null>(null);
   const safeName = sanitizeName(fileName);
@@ -98,6 +100,7 @@ export default function DownloadButton({
         await downloadAsDocx(text, safeName);
       }
       onClose();
+      if (onSuccess) onSuccess();
     } catch (err) {
       console.error(err);
       onError?.("Không thể tạo tệp tải xuống. Vui lòng thử lại.");

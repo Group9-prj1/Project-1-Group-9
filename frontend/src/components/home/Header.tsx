@@ -9,6 +9,7 @@ const handleLogin = () => {
 export default function Header() {
   const [user, setUser] = useState<any>(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,7 +20,26 @@ export default function Header() {
       .catch(() => setUser(null));
   }, []);
 
-  const handleLogout = async () => {
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = async (event: React.MouseEvent) => {
+    event.stopPropagation();
     const base = import.meta.env.VITE_API_BASE;
     await fetch(`${base}/user/logout`, {
       method: "POST",
@@ -30,7 +50,7 @@ export default function Header() {
   };
 
   return (
-    <header className="app-header">
+    <header className={`app-header ${scrolled ? 'scrolled' : ''}`}>
       <div className="header-glow"></div>
       <div className="header-inner">
         <div className="header-bar">
@@ -64,7 +84,7 @@ export default function Header() {
                       />
                     ) : (
                       <div className="user-avatar-placeholder">
-                        <User className="icon-5" />
+                        <User className="icon-5 text-white" />
                       </div>
                     )}
                     <div className="user-info">
@@ -79,6 +99,9 @@ export default function Header() {
 
                 {showDropdown && (
                   <div className="dropdown-menu">
+                    <div className="dropdown-header">
+                      <p className="dropdown-user-email">{user.email}</p>
+                    </div>
                     <button
                       className="dropdown-item logout-btn"
                       onClick={handleLogout}

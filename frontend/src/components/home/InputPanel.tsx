@@ -5,7 +5,7 @@ import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
 import ErrorPanel from "./ErrorPanel";
 import DownloadButton from "./DownLoadButton";
-import { predictSummary } from "../../services/summaries";  
+import { cleanInputText, predictSummary, hasEmoji,removeEmojis } from "../../services/summaries";  
 import "../../styles/InputPanel.css";
 
 type Props = {
@@ -24,13 +24,18 @@ export default function InputPanel({
   const nav = useNavigate();                             
 
   const [inputText, setInputText] = useState(originalText);
+  
   const [notice, setNotice] = useState<string | null>(null);
   const [errorOpen, setErrorOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);              
 
+  
   const maxChars = 2000;
 
   useEffect(() => {
@@ -73,8 +78,9 @@ export default function InputPanel({
     setLoading(true);
     setErrorMsg("");
     try {
-
-      const res = await predictSummary({ text: inputText },undefined, {
+      const cleanedText = cleanInputText(inputText);
+      const textInput = removeEmojis(cleanedText);
+      const res = await predictSummary({ text: textInput }, undefined, {
         timeoutMs: 15000,
       });
       // chuyển sang trang chi tiết/lịch sử của bản tóm tắt vừa tạo
@@ -84,8 +90,18 @@ export default function InputPanel({
       setErrorOpen(true);
     } finally {
       setLoading(false);
-    }
+    } 
   };
+  const handlePasteBlockEmoji = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const raw = e.clipboardData.getData("text") || "";
+        if (hasEmoji(raw)) {
+          e.preventDefault();
+          setErrorMsg("Không cho phép dán emoji/icon vào nội dung.");
+          setErrorOpen(true);
+        }
+  };
+
+
 
   return (
     <div className="ip-page">
@@ -114,6 +130,7 @@ export default function InputPanel({
                   placeholder="Nhập hoặc dán văn bản ở đây…"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
+                  onPaste={handlePasteBlockEmoji}
                   maxLength={maxChars}
                   readOnly={readOnly}
                 />
@@ -142,7 +159,7 @@ export default function InputPanel({
                   type="button"
                   className={`ip-primary ${!canSummarize ? "opacity-60 cursor-not-allowed" : ""}`}
                   disabled={!canSummarize}
-                  onClick={handleSummarize}                          // 👈 gắn handler
+                  onClick={handleSummarize}
                 >
                   <Sparkles className={`ip-icon ${loading ? "animate-spin" : ""}`} />
                   <span>{loading ? "Đang tóm tắt…" : "Tóm tắt"}</span>
@@ -198,12 +215,21 @@ export default function InputPanel({
           text={summaryText}
           fileName="van_ban_tom_tat"
           onError={handleUploadError}
+          onSuccess={() =>{ 
+            setDownloaded(true)
+            setTimeout(() => setDownloaded(false), 2000);  
+          }}
         />
       </div>
 
       {copied && (
         <div className="fixed top-6 inset-x-0 mx-auto w-fit bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in-out z-[9999]">
           Đã sao chép nội dung tóm tắt!
+        </div>
+      )}
+      {downloaded && (
+        <div className="fixed top-6 inset-x-0 mx-auto w-fit bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in-out z-[9999]">
+          Bắt đầu tải xuống tóm tắt...
         </div>
       )}
     </div>
