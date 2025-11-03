@@ -35,6 +35,7 @@ export default function InputPanel({
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);              
 
+  const [needLogin, setNeedLogin] = useState(false);
   
   const maxChars = 2000;
 
@@ -73,10 +74,33 @@ export default function InputPanel({
     }
   };
 
+  const checkLogin = async (): Promise<boolean> => {
+    const base = import.meta.env.VITE_API_BASE;
+    try {
+      const res = await fetch(`${base}/user/me`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        return Boolean(data);
+      }
+    } catch (err) {
+      console.error("Error checking login:", err);
+    }
+    return false;
+  }
+
   const handleSummarize = async () => {
     if (!canSummarize) return;
     setLoading(true);
     setErrorMsg("");
+    // kiểm tra người dùng đã đăng nhập chưa
+    const loggedIn = await checkLogin();
+    if (!loggedIn) {
+      setErrorMsg("Bạn cần đăng nhập để tiếp tục.");
+      setErrorOpen(true);
+      setNeedLogin(true);
+      setLoading(false);
+      return;
+    }
     try {
       const cleanedText = cleanInputText(inputText);
       const textInput = removeEmojis(cleanedText);
@@ -100,9 +124,14 @@ export default function InputPanel({
           setErrorOpen(true);
         }
   };
-
-
-
+// chuyển trang khi người dùng đóng thông báo lỗi
+    const closeErrorAndNavigate = () => {
+      setErrorOpen(false);
+      if (needLogin) {
+        nav("/login");
+        setNeedLogin(false);
+      }
+    };
   return (
     <div className="ip-page">
       <div className="ip-container">
@@ -207,7 +236,7 @@ export default function InputPanel({
           open={errorOpen}
           title="Lỗi"
           message={errorMsg}
-          onClose={() => setErrorOpen(false)}
+          onClose={closeErrorAndNavigate}
         />
         <DownloadButton
           isOpen={downloadModalOpen}
