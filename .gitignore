@@ -21,3 +21,7 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+backend/app/llm/models/*
+!backend/app/llm/models/.gitkeep
+backend/.hf_cache/
+.hf_cache/

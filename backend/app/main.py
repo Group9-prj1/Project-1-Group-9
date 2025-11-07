@@ -46,6 +46,14 @@ def db_test(db: Session = Depends(get_db)):
         return {"status": "ok", "result": result}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+@app.on_event("startup")
+def _warmup():
+    from app.llm.summarizer import load_model
+    try:
+        load_model()
+        print("[startup] model ready (cached)")
+    except Exception as e:
+        print(f"[startup] warmup failed: {e}")
 
 app.include_router(google_api)
 app.include_router(github_api)
