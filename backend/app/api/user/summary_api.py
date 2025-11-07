@@ -10,6 +10,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from sqlalchemy import desc
 import requests
+from app.llm.summarizer import summarize, load_model
 
 router = APIRouter(prefix="/summaries", tags=["summaries"])
 
@@ -64,40 +65,40 @@ def get_summary(
 
 @router.post("/predict", response_model=SummaryView, status_code=201)
 def predict_and_save(
-    body: PredictIn,                   
+    body: PredictIn,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user), 
+    current_user: User = Depends(get_current_user),
 ):
-    try:
-        resp = requests.post(URL_PREDICT, json={"text": body.text}, timeout=15)
-    except requests.Timeout:
-        raise HTTPException(status_code=504, detail="Prediction service timeout")
-    except requests.RequestException as e:
-        raise HTTPException(status_code=502, detail=f"Prediction service error: {e}")
-    if resp.status_code == 404:
-         raise HTTPException(
-            status_code=502,
-            detail="Dịch vụ chưa sẵn sàng"
-        )
-    if not resp.ok:
-        raise HTTPException(status_code=502, detail=f"Upstream {resp.status_code}: {resp.text}")
-    try:
-        data = resp.json()
-    except ValueError:
-        raise HTTPException(status_code=502, detail=f"Prediction returned invalid JSON: {resp.text[:200]}")
-    summary_text = data.get("summary") or data.get("summary_text") or data.get("result")
-    if not summary_text or not isinstance(summary_text, str):
-        raise HTTPException(status_code=502, detail=f"Missing summary in upstream payload: {data}")
+    # Validate cơ bản (Pydantic đã check min/max length rồi)
+    text = (body.text or "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Thiếu nội dung cần tóm tắt.")
 
+    # Gọi mô hình nội bộ
+    try:
+        summary_text, _latency_ms = summarize(text)
+    except FileNotFoundError as e:
+        # Model chưa sẵn sàng/đường dẫn sai
+        raise HTTPException(status_code=503, detail=f"Model chưa sẵn sàng: {e}")
+    except Exception as e:
+        # Lỗi suy luận
+        raise HTTPException(status_code=502, detail=f"Inference error: {e}")
+
+    if not isinstance(summary_text, str) or not summary_text.strip():
+        raise HTTPException(status_code=502, detail="Kết quả tóm tắt không hợp lệ.")
+
+    # Lưu DB
     row = Summary(
         id=uuid.uuid4(),
-        user_id=str(current_user.id),
-        original_text=body.text,
+        user_id=str(current_user.id),                
+        original_text=text,
         summary_text=summary_text,
         created_at=dt.datetime.now(dt.timezone.utc),
     )
     try:
-        db.add(row); db.commit(); db.refresh(row)
+        db.add(row)
+        db.commit()
+        db.refresh(row)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"DB insert error: {e}")
