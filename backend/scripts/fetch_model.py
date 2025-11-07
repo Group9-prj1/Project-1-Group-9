@@ -1,30 +1,32 @@
-import os, requests
+import os
+import requests
+from tqdm import tqdm
 
-# Đường dẫn lưu model trong project
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "app", "llm", "models", "phobertsum_lightweight.pt")
-
-# Link tải model từ GitHub Release (sau khi bạn upload .pt)
+MODEL_DIR = os.path.join("backend", "app", "llm", "models")
+MODEL_PATH = os.path.join(MODEL_DIR, "phobertsum_lightweight.pt")
 URL = "https://github.com/Group9-prj1/Project-1-Group-9/releases/download/v1.0-model/phobertsum_lightweight.pt"
 
 def ensure_model():
-    """Kiểm tra nếu chưa có model thì tự tải về"""
-    if os.path.exists(MODEL_PATH):
-        print("✅ Model đã tồn tại:", MODEL_PATH)
-        return MODEL_PATH
+    os.makedirs(MODEL_DIR, exist_ok=True)
+    if not os.path.exists(MODEL_PATH):
+        print(f" Đang tải model từ GitHub: {URL}")
 
-    os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
-    print("⬇️  Đang tải model từ GitHub...")
+        with requests.get(URL, stream=True) as r:
+            r.raise_for_status()
+            total_size = int(r.headers.get("content-length", 0))
+            block_size = 8192
+            progress_bar = tqdm(total=total_size, unit='B', unit_scale=True)
 
-    with requests.get(URL, stream=True) as r:
-        r.raise_for_status()
-        with open(MODEL_PATH, "wb") as f:
-            for chunk in r.iter_content(1 << 20):
-                if chunk:
-                    f.write(chunk)
+            with open(MODEL_PATH, "wb") as f:
+                for chunk in r.iter_content(chunk_size=block_size):
+                    if chunk:
+                        f.write(chunk)
+                        progress_bar.update(len(chunk))
 
-    print("✅ Tải xong model:", MODEL_PATH)
-    return MODEL_PATH
-
+            progress_bar.close()
+        print("Model tải hoàn tất!")
+    else:
+        print(" Model đã tồn tại, bỏ qua tải lại.")
 
 if __name__ == "__main__":
     ensure_model()
