@@ -2,7 +2,7 @@ import os, time, re, torch, numpy as np, torch.nn as nn
 from transformers import AutoTokenizer, AutoConfig, AutoModel
 from huggingface_hub import snapshot_download     
 from underthesea import sent_tokenize
-from backend.scripts.fetch_model import ensure_model
+from scripts.fetch_model import ensure_model
 
 MODEL_PATH = ensure_model()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
