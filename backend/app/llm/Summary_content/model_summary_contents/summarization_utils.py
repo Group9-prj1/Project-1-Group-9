@@ -5,6 +5,7 @@ from sentence_transformers import SentenceTransformer, util as st_util
 from underthesea import sent_tokenize
 from transformers import AutoTokenizer
 import torch
+from rouge import Rouge
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -72,6 +73,66 @@ def generate_soft_label(sentences, summaries, embed_model, top_n=3, threshold=No
         idx = np.argsort(scores)[-top_n:]
         labels = [1 if i in idx else 0 for i in range(len(scores))]
     return labels, scores.tolist()
+
+def generate_greedy_oracle_labels(sentences, gold_summary, rouge, max_sentences=3):
+    """
+    Tạo nhãn trích xuất bằng phương pháp Greedy Oracle dựa trên ROUGE-1 F-score.
+    """
+    if not sentences or not gold_summary:
+        return [0] * len(sentences)
+    
+    selected_indices = []
+    selected_text = ""
+    best_rouge_f = 0.0
+    
+    # Lọc các câu rỗng
+    valid_sentences = [(i, sent) for i, sent in enumerate(sentences) if sent.strip()]
+    
+    # Bản đồ từ chỉ số hợp lệ về chỉ số gốc
+    original_indices = [i for i, sent in enumerate(sentences) if sent.strip()]
+    
+    # Nếu không có câu hợp lệ
+    if not valid_sentences:
+        return [0] * len(sentences)
+    
+    for _ in range(max_sentences):
+        best_local_index = -1
+        best_local_score = best_rouge_f
+        
+        # Thử thêm từng câu chưa được chọn
+        for i, (original_idx, sentence) in enumerate(valid_sentences):
+            if original_idx in selected_indices:
+                continue
+            
+            # Thử kết hợp
+            current_text_try = (selected_text + " " + sentence).strip()
+            
+            try:
+                scores = rouge.get_scores(current_text_try, gold_summary)
+                if not scores:  # Xử lý trường hợp rouge trả về rỗng
+                    continue
+                f_score = scores[0]['rouge-1']['f']
+            except Exception as e:
+                # Bỏ qua nếu có lỗi (ví dụ: chuỗi rỗng)
+                continue
+            
+            if f_score > best_local_score:
+                best_local_score = f_score
+                best_local_index = original_idx
+                best_local_text = current_text_try  # Lưu lại văn bản tốt nhất
+        
+        # Nếu tìm thấy câu tốt hơn
+        if best_local_index != -1 and best_local_score > best_rouge_f:
+            selected_indices.append(best_local_index)
+            best_rouge_f = best_local_score
+            selected_text = best_local_text
+        else:
+            # Nếu không có câu nào cải thiện điểm, dừng lại
+            break
+    
+    # Tạo nhãn cuối cùng
+    labels = [1 if i in selected_indices else 0 for i in range(len(sentences))]
+    return labels
 
 #
 # content = ("Theo đại biểu Quốc hội, quy định về thuế suất đối với cơ quan báo chí cho thấy sự mâu thuẫn giữa "

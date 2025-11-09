@@ -1,3 +1,5 @@
+from rouge import Rouge
+
 from Summary_content.model_summary_contents.summarization_utils import print_memory_usage
 from transformers.models import AutoTokenizer
 from sentence_transformers import SentenceTransformer
@@ -28,6 +30,8 @@ chunk_size = 100
 
 
 def main():
+    print("Khởi tạo ROUGE...")
+    rouge = Rouge()
     train_dfs, val_dfs, test_dfs = [], [], []
     print("Doc du lieu theo chunk")
     for chunk_ in pd.read_csv(file_data_train, usecols=['content', 'summary'], chunksize=chunk_size):
@@ -48,20 +52,20 @@ def main():
         
         print("Tạo train cache...")
         train_dataset = VietnameseSummarizationDataset(train_df['content'].values, train_df['summary'].values,
-                                                       tokenizer, embed_model, top_n=2, max_content_length=96, cache_file=train_cache)
+                                                       tokenizer, rouge, max_content_length=96, cache_file=train_cache)
         print("train_dataset : ", train_dataset)
         
         print("Tạo validation cache...")
         val_dataset = VietnameseSummarizationDataset(
             val_df['content'].values, val_df['summary'].values,
-            tokenizer, embed_model, top_n=2,
+            tokenizer, rouge,
             max_content_length=96, cache_file=val_cache
         )
         
         print("Tạo test cache...")
         test_dataset = VietnameseSummarizationDataset(
             test_df['content'].values, test_df['summary'].values,
-            tokenizer, embed_model, top_n=2,
+            tokenizer, rouge,
             max_content_length=96, cache_file=test_cache
         )
         
@@ -132,15 +136,23 @@ def main():
         for i in range(min(3, len(test_samples))):
             sample = test_samples[i]
             input_ids = sample['input_ids']
+            # Lấy tóm tắt vàng GỐC để so sánh
+            gold_summary = sample['gold_summary']
+            
             sentences = [tokenizer.decode(sent, skip_special_tokens=True) for sent in input_ids]
-            content = " ".join(sentences)
+            content = " ".join([s for s in sentences if s.strip() and s != tokenizer.pad_token])  # Nối lại nội dung
             
             print(f"\nMẫu {i + 1}:")
-            # print("Văn bản:", content[:300] + "..." if len(content) > 300 else content)
-            print("Văn bản:", content)
-            summary = extractive_summarize_from_inputids(content, model, tokenizer, device)
-            print("Tóm tắt sinh:", summary)
+            print("Văn bản:", content[:500] + "...")  # In 500 ký tự đầu
+            print("-" * 20)
+            print("Tóm tắt VÀNG (Gốc):", gold_summary)
+            
+            # Sửa: Hàm extractive_summarize_from_inputids cần được gọi đúng
+            # Chúng ta sẽ dùng lại hàm cũ nhưng truyền input_ids
+            summary = extractive_summarize_from_inputids(input_ids, model, tokenizer, device, max_sent=3)
+            print("Tóm tắt SINH (Model):", summary)
             print("-" * 50)
+    
     except Exception as e:
         print(f"Lỗi khi demo: {e}")
     
