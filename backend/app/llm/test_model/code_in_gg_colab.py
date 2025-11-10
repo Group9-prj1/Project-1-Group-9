@@ -158,7 +158,11 @@ def extractive_summarize(text, model, tokenizer, device, max_sent=3, max_length=
         top_idx = np.argsort(probs)[-max_sent:]
         top_idx = sorted(top_idx)
         selected = [sentences[i] for i in top_idx if sentences[i].strip()]
-        return " ".join(selected)
+        sentence_scores = {sentences[i]: float(probs[i]) for i in range(len(sentences))}
+        
+        avg_confidence = float(np.mean([probs[i] for i in top_idx]))
+        
+        return " ".join(selected), sentence_scores, avg_confidence
 
 def load_model(model_path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -208,8 +212,13 @@ async def predict(data: dict):
     if not model:
         return {"error": "Model is not loaded"}
     
-    summary = extractive_summarize(text, model, tokenizer, device, max_sent=3)
-    return {"summary": summary}
+    summary, sentence_scores, avg_confidence = extractive_summarize(text, model, tokenizer, device, max_sent=3)
+    
+    return {
+        "summary": summary,
+        "avg_confidence": avg_confidence,
+        "sentence_scores": sentence_scores
+    }
 
 
 public_url = ngrok.connect(8000).public_url

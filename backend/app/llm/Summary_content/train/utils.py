@@ -12,6 +12,8 @@ import torch.optim as optim
 from Summary_content.train.streaming_dataset import StreamingDataset
 import gc
 import pickle
+
+from Summary_content.train.utils import compute_rouge
 from main_model import split_cache_file
 import numpy as np
 
@@ -27,13 +29,16 @@ def collate_fn(batch):
     
     try:
         max_sent_count = max([b['input_ids'].shape[0] for b in batch])
+        
+        # Lấy gold_summaries trước khi lặp (vì nó không cần padding)
+        gold_summaries = [b['gold_summary'] for b in batch]
+        
         for i, b in enumerate(batch):
             sent_count = b['input_ids'].shape[0]
             if sent_count < max_sent_count:
                 padding_size = max_sent_count - sent_count
                 seq_len = b['input_ids'].shape[1]
                 
-                # Sửa: sử dụng kiểu số đúng
                 padding = torch.zeros((padding_size, seq_len), dtype=torch.long)
                 batch[i]['input_ids'] = torch.cat([b['input_ids'], padding])
                 
@@ -46,7 +51,8 @@ def collate_fn(batch):
         return {
             'input_ids': torch.stack([b['input_ids'] for b in batch]),
             'attention_mask': torch.stack([b['attention_mask'] for b in batch]),
-            'labels': torch.stack([b['labels'] for b in batch])
+            'labels': torch.stack([b['labels'] for b in batch]),
+            'gold_summaries': gold_summaries  # <-- THÊM DÒNG NÀY
         }
     except Exception as e:
         error_type = str(type(e).__name__)
@@ -307,31 +313,75 @@ def train_model_memory_efficient(model, train_dataset, val_dataset, device, epoc
     
     return model
 
-
-def compute_rouge(gold, pred):
-    """Tính chỉ số ROUGE-1 và ROUGE-2 dựa trên tần suất xuất hiện."""
-    gold_tokens = gold.split()
-    pred_tokens = pred.split()
-    gold_unigrams = Counter(gold_tokens)
-    pred_unigrams = Counter(pred_tokens)
-    common_unigrams = sum((gold_unigrams & pred_unigrams).values())
-    if len(gold_tokens) == 0 or len(pred_tokens) == 0:
-        rouge1_recall = rouge1_precision = rouge1_f1 = 0.0
-    else:
-        rouge1_recall = common_unigrams / len(gold_tokens)
-        rouge1_precision = common_unigrams / len(pred_tokens)
-        rouge1_f1 = 2 * rouge1_precision * rouge1_recall / (rouge1_precision + rouge1_recall) if (rouge1_precision + rouge1_recall) > 0 else 0.0
+def evaluate_memory_efficient(model, tokenizer, device, test_chunk_files, rouge, max_sent=3, max_samples=None):
+    """
+    Đánh giá mô hình trên test set bằng cách so sánh với tóm tắt "vàng" GỐC.
+    """
+    rouge1_scores, rouge2_scores, rougeL_scores = [], [], []
+    sample_count = 0
     
-    gold_bigrams = Counter(zip(gold_tokens, gold_tokens[1:]))
-    pred_bigrams = Counter(zip(pred_tokens, pred_tokens[1:]))
-    common_bigrams = sum((gold_bigrams & pred_bigrams).values())
-    if len(gold_bigrams) == 0 or len(pred_bigrams) == 0:
-        rouge2_recall = rouge2_precision = rouge2_f1 = 0.0
-    else:
-        rouge2_recall = common_bigrams / sum(gold_bigrams.values())
-        rouge2_precision = common_bigrams / sum(pred_bigrams.values())
-        rouge2_f1 = 2 * rouge2_precision * rouge2_recall / (rouge2_precision + rouge2_recall) if (rouge2_precision + rouge2_recall) > 0 else 0.0
-    return {'rouge1': rouge1_f1, 'rouge2': rouge2_f1}
+    model.eval()  # Chuyển model sang chế độ eval
+    
+    for chunk_file in test_chunk_files:
+        try:
+            with open(chunk_file, 'rb') as f:
+                chunk_data = pickle.load(f)
+            
+            # Sửa: Không dùng DataLoader, lặp qua từng sample để lấy gold_summary
+            for sample in tqdm(chunk_data, desc=f"Evaluating {chunk_file}", leave=False):
+                if max_samples is not None and sample_count >= max_samples:
+                    break
+                
+                try:
+                    input_ids = sample['input_ids']
+                    # Sửa: Lấy tóm tắt "vàng" GỐC từ cache
+                    gold = sample['gold_summary']
+                    
+                    # Sinh tóm tắt
+                    pred = extractive_summarize_from_inputids(input_ids, model, tokenizer, device, max_sent=max_sent)
+                    
+                    # Bỏ qua nếu sinh ra tóm tắt rỗng hoặc tóm tắt vàng rỗng
+                    if not pred.strip() or not gold.strip():
+                        continue
+                    
+                    # Sửa: Sử dụng thư viện rouge chuẩn
+                    scores = rouge.get_scores(pred, gold)[0]
+                    
+                    rouge1_scores.append(scores['rouge-1']['f'])
+                    rouge2_scores.append(scores['rouge-2']['f'])
+                    rougeL_scores.append(scores['rouge-l']['f'])
+                    
+                    sample_count += 1
+                
+                except Exception as e:
+                    # Lỗi khi xử lý 1 sample, tiếp tục
+                    # print(f"Lỗi khi đánh giá sample: {e}")
+                    continue
+            
+            del chunk_data
+            gc.collect()
+            
+            if max_samples is not None and sample_count >= max_samples:
+                break
+        
+        except Exception as e:
+            print(f"Lỗi khi đánh giá file {chunk_file}: {e}")
+            continue
+    
+    if sample_count == 0:
+        print("Không có mẫu nào được đánh giá.")
+        return {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0}
+    
+    print(f"Đánh giá trên {sample_count} mẫu:")
+    print(f"Avg ROUGE-1 F1: {np.mean(rouge1_scores):.4f} ± {np.std(rouge1_scores):.4f}")
+    print(f"Avg ROUGE-2 F1: {np.mean(rouge2_scores):.4f} ± {np.std(rouge2_scores):.4f}")
+    print(f"Avg ROUGE-L F1: {np.mean(rougeL_scores):.4f} ± {np.std(rougeL_scores):.4f}")
+    
+    return {
+        'rouge-1': np.mean(rouge1_scores),
+        'rouge-2': np.mean(rouge2_scores),
+        'rouge-l': np.mean(rougeL_scores)
+    }
 
 def extractive_summarize_from_inputids(input_ids, model, tokenizer, device, max_sent=3):
     """Sinh tóm tắt trích xuất từ input_ids (không cần content gốc)."""
