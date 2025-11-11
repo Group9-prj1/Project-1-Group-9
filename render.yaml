@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: fastapi-backend
+    env: python
+    plan: free
+
+    # chỉ định thư mục chứa backend code
+    rootDir: backend
+
+    # lệnh cài đặt dependencies
+    buildCommand: "pip install -r requirements.txt"
+
+    # lệnh chạy ứng dụng FastAPI
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port 10000"
+
+    # cấu hình môi trường
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10
+      - key: PORT
+        value: 10000
+
+    autoDeploy: true
