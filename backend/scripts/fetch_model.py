@@ -2,7 +2,7 @@ import os
 import requests
 from tqdm import tqdm
 
-MODEL_DIR = os.path.join("backend", "app", "llm", "models")
+MODEL_DIR = os.path.join("app", "llm", "models")
 MODEL_PATH = os.path.join(MODEL_DIR, "phobertsum_lightweight.pt")
 URL = "https://github.com/Group9-prj1/Project-1-Group-9/releases/download/v1.0-model/phobertsum_lightweight.pt"
 
