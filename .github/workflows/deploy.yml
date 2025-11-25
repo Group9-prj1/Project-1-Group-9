@@ -1,0 +1,42 @@
+name: Deploy Infrastructure with Terraform
+
+on:
+  push:
+    branches:
+      - main # Chạy workflow mỗi khi có push lên branch main
+    paths:
+      - 'infra/**' # Chỉ chạy khi các file trong thư mục infra/ thay đổi
+
+jobs:
+  terraform:
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/ # Quan trọng: Chạy lệnh trong thư mục infra/
+
+    steps:
+      # 1. Checkout Code
+      - uses: actions/checkout@v4
+      
+      # 2. Setup Terraform
+      - uses: hashicorp/setup-terraform@v3
+
+      # 3. Chạy Terraform
+      - name: Terraform Init and Apply
+        env:
+          # Truyền các giá trị từ GitHub Secrets vào Biến Môi trường TF_VAR_
+          TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+          TF_VAR_render_api_key: ${{ secrets.RENDER_API_KEY }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN }}
+          TF_VAR_app_secret_key: ${{ secrets.APP_SECRET_KEY }}
+          
+          # Cần thêm các biến môi trường khác nếu có (ví dụ: Vercel Team ID)
+          TF_VAR_vercel_team_id: ${{ secrets.VERCEL_TEAM_ID }} 
+
+        run: |
+          # Khởi tạo Terraform
+          terraform init
+          
+          # Chạy Apply (dùng -auto-approve để tự động xác nhận)
+          terraform apply -auto-approve
