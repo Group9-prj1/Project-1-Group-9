@@ -2,14 +2,13 @@
 FROM python:3.11-slim
 ENV PYTHONUNBUFFERED 1
 WORKDIR /app
-# Copy dependencies và cài đặt
-COPY requirements.txt .
+# SỬA LỖI COPY: Tham chiếu file từ thư mục 'backend' trong context gốc
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 # Copy mã nguồn backend vào container
-COPY . /app/
+COPY backend/ /app/
 
 # Lệnh Build: Chạy Alembic migrations và Tải Model AI
-# LƯU Ý: Đảm bảo load_model.py là đúng file bạn muốn chạy
 RUN alembic upgrade head && python app/llm/load_model.py 
 
 # Lệnh chạy server Gunicorn/Uvicorn
