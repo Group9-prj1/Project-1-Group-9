@@ -8,8 +8,13 @@ pydantic-settings>=2.2.1,<2.3
 PyJWT>=2.9.0,<2.10
 itsdangerous
 python-jose[cryptography]==3.3.0
+
 # --- LLM / summarizer deps ---
-torch==2.5.0
+# ⚠️ IMPORTANT: Using CPU-only version to reduce Docker image size
+# This reduces torch from ~4GB (CUDA) to ~200MB (CPU-only)
+# EC2 instances typically don't have GPU, so CPU version is appropriate
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.0+cpu
 transformers==4.44.2
 sentencepiece==0.2.0
 underthesea==6.8.4
