@@ -5,7 +5,6 @@ services:
     image: postgres:16-alpine
     restart: always
     environment:
-      # Lấy mật khẩu DB từ file .env
       POSTGRES_USER: project_user
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: summarizer_db
@@ -15,38 +14,36 @@ services:
   backend:
     build: 
       context: .
-      dockerfile: backend/Dockerfile # Trỏ đến Dockerfile trong thư mục backend/
+      dockerfile: backend/Dockerfile
     restart: always
     environment:
-      # Kết nối đến container DB nội bộ
+      # KẾT NỐI DB NỘI BỘ VÀ TRUYỀN SECRETS
       DATABASE_URL: postgresql://project_user:${DB_PASSWORD}@db:5432/summarizer_db
       SECRET_KEY: ${APP_SECRET_KEY}
-      # Lấy IP công khai (3.26.14.30) từ file .env
       FRONTEND_ORIGIN: http://${PUBLIC_IP}:3000
       
-      # Truyền các OAuth Secrets
+      # CẤU HÌNH OAUTH VÀ LLM
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_REDIRECT_URI: http://${PUBLIC_IP}:8000/auth/google/callback
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
       GITHUB_REDIRECT_URI: http://${PUBLIC_IP}:8000/auth/github/callback
-      URL_PREDICT: ${URL_PREDICT} # Giữ nguyên nếu là dịch vụ ngoài
-
+      URL_PREDICT: ${URL_PREDICT} # URL Ngrok/External service
+      
     ports:
-      - "8000:8000" # Mở cổng 8000 của Backend
+      - "8000:8000" 
     depends_on:
       - db
 
   frontend:
     build:
       context: .
-      dockerfile: frontend/Dockerfile # Trỏ đến Dockerfile trong thư mục frontend/
+      dockerfile: frontend/Dockerfile
+      # Truyền API URL nội bộ (http://backend:8000) vào giai đoạn build
       args:
-        # Truyền URL Backend nội bộ vào giai đoạn build của Vite/React
         VITE_API_URL: http://backend:8000 
     restart: always
-    # Mở cổng 3000 của EC2, map vào cổng 80 của Nginx
     ports:
       - "3000:80" 
     depends_on:
