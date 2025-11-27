@@ -1,3 +1,4 @@
+# File: docker-compose.yml
 version: '3.8'
 
 services:
@@ -29,7 +30,7 @@ services:
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
       GITHUB_REDIRECT_URI: http://${PUBLIC_IP}:8000/auth/github/callback
-      URL_PREDICT: ${URL_PREDICT} # URL Ngrok/External service
+      URL_PREDICT: ${URL_PREDICT} 
       
     ports:
       - "8000:8000" 
@@ -40,7 +41,7 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
-      # Truyền API URL nội bộ (http://backend:8000) vào giai đoạn build
+      # Truyền API URL nội bộ vào giai đoạn build
       args:
         VITE_API_URL: http://backend:8000 
     restart: always
