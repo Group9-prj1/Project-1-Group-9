@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Hugging Face cache and models (will download in container)
+.hf_cache/
+app/llm/models/*.pt
+app/llm/models/*.pth
+app/llm/Summary_content/
+app/llm/test_model/
+
+# Git
+.git/
+.gitignore
+.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment files (use env_file in docker-compose)
+.env
+.env.local
+.env.production
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose*.yml
+
+# Deployment scripts (not needed in image)
+deploy/
+
+# Test files
+tests/
+*.test.py
+pytest.ini
+.pytest_cache/
+
+# Documentation
+README.md
+*.md
+
+# Coverage and linting
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Alembic (may include in future)
+alembic.ini
+
+# Large archives
+*.tar.gz
+*.zip
+*.rar
+
+# Node modules (if any)
+node_modules/
+package-lock.json

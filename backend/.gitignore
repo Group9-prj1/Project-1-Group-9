@@ -1,0 +1,94 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Hugging Face Cache and Models
+.hf_cache/
+app/llm/models/*.pt
+app/llm/models/*.pth
+app/llm/Summary_content/
+app/llm/test_model/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+*.cover
+.hypothesis/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables (IMPORTANT!)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Docker volumes (local data)
+docker-volumes/
+
+# Alembic
+alembic/versions/*.pyc
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Security - Never commit these!
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets.yml
+secrets.json
