@@ -10,7 +10,7 @@ export default function App() {
         <Routes>
             <Route path="/" element={<HomePage/>} />
            <Route path="/login" element={<LoginPage/>} />
-            <Route path="/summaries/:id" element={<HistoryPage/>} />
+            <Route path="/history/:id" element={<HistoryPage />} />
         </Routes>
       </BrowserRouter>
   );

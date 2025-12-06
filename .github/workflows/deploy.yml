@@ -1,0 +1,89 @@
+name: CD - Deploy to EC2
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            
+            echo "🚀 Starting deployment..."
+            
+            # Clone latest code
+            cd /tmp
+            rm -rf /tmp/repo
+            git clone https://${{ secrets.DEPLOY_TOKEN }}@github.com/${{ github.repository }}.git /tmp/repo
+            
+            # Update backend
+            echo "📦 Updating backend..."
+            sudo cp -r /tmp/repo/backend/app /opt/backend/ || true
+            
+            # Rebuild backend
+            cd /opt/backend
+            docker-compose down
+            docker-compose up -d --build
+            
+            # Wait for backend
+            echo "⏳ Waiting for backend..."
+            sleep 20
+            
+            # Health check
+            curl -f http://localhost:8000/test-db || exit 1
+            echo "✅ Backend healthy"
+            
+            # Update frontend
+            echo "🎨 Updating frontend..."
+            sudo rm -rf /opt/frontend
+            sudo cp -r /tmp/repo/frontend /opt/frontend
+            sudo chown -R ubuntu:ubuntu /opt/frontend
+            
+            cd /opt/frontend
+            npm install
+            npm run build
+            
+            # Deploy frontend to nginx
+            sudo rm -rf /var/www/frontend/dist
+            sudo mkdir -p /var/www/frontend
+            sudo cp -r /opt/frontend/dist /var/www/frontend/
+            sudo chown -R www-data:www-data /var/www/frontend
+            
+            # Reload nginx
+            sudo systemctl reload nginx
+            
+            # Cleanup
+            rm -rf /tmp/repo
+            
+            echo "✅ Deployment completed successfully!"
+            
+            # Show status
+            cd /opt/backend
+            docker-compose ps
+      
+      - name: Deployment notification
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed!"
+            exit 1
+          fi
