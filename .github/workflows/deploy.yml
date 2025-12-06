@@ -2,7 +2,7 @@ name: CD - Deploy to EC2
 
 on:
   push:
-    branches: [ main, master,deploy ]
+    branches: [ main, master, deploy ]
     paths:
       - 'backend/**'
       - 'frontend/**'
@@ -28,49 +28,66 @@ jobs:
             
             echo "🚀 Starting deployment..."
             
-            # Clone latest code
+            # Clone latest code from the current branch
             cd /tmp
-            rm -rf /tmp/repo
-            git clone https://${{ secrets.DEPLOY_TOKEN }}@github.com/${{ github.repository }}.git /tmp/repo
+            sudo rm -rf /tmp/repo
+            git clone -b ${{ github.ref_name }} https://${{ secrets.DEPLOY_TOKEN }}@github.com/${{ github.repository }}.git /tmp/repo
             
-            # Update backend
+            # Update backend (sync entire directory)
             echo "📦 Updating backend..."
-            sudo cp -r /tmp/repo/backend/app /opt/backend/ || true
+            # Backup .env before rsync
+            sudo cp /opt/backend/.env /tmp/backend.env.backup 2>/dev/null || true
+            sudo rsync -av --delete /tmp/repo/backend/ /opt/backend/
+            # Restore .env after rsync
+            sudo cp /tmp/backend.env.backup /opt/backend/.env 2>/dev/null || true
             
             # Rebuild backend
             cd /opt/backend
             docker-compose down
             docker-compose up -d --build
             
-            # Wait for backend
-            echo "⏳ Waiting for backend..."
-            sleep 20
+            # Wait for backend (ML models need time)
+            echo "⏳ Waiting for backend (loading ML models)..."
+            sleep 60
             
-            # Health check
-            curl -f http://localhost:8000/test-db || exit 1
-            echo "✅ Backend healthy"
+            # Health check with retry
+            echo "🏥 Health check..."
+            for i in {1..5}; do
+              if curl -f http://localhost:8000/test-db 2>/dev/null; then
+                echo "✅ Backend healthy"
+                break
+              else
+                echo "Retry $i/5..."
+                sleep 10
+              fi
+              if [ $i -eq 5 ]; then
+                echo "❌ Backend health check failed"
+                docker-compose logs --tail=50
+                exit 1
+              fi
+            done
             
             # Update frontend
             echo "🎨 Updating frontend..."
-            sudo rm -rf /opt/frontend
-            sudo cp -r /tmp/repo/frontend /opt/frontend
+            sudo rsync -av --delete /tmp/repo/frontend/ /opt/frontend/
             sudo chown -R ubuntu:ubuntu /opt/frontend
             
+            # Create .env for frontend
             cd /opt/frontend
+            cat > .env << 'EOF'
+            VITE_API_BASE=http://tomtatvanban.duckdns.org
+            VITE_FRONT_HOME=http://tomtatvanban.duckdns.org
+            EOF
+            
+            # Build frontend
             npm install
             npm run build
             
-            # Deploy frontend to nginx
-            sudo rm -rf /var/www/frontend/dist
-            sudo mkdir -p /var/www/frontend
-            sudo cp -r /opt/frontend/dist /var/www/frontend/
-            sudo chown -R www-data:www-data /var/www/frontend
-            
-            # Reload nginx
+            # Reload nginx (serves from /opt/frontend/dist)
             sudo systemctl reload nginx
             
             # Cleanup
-            rm -rf /tmp/repo
+            sudo rm -rf /tmp/repo
             
             echo "✅ Deployment completed successfully!"
             
