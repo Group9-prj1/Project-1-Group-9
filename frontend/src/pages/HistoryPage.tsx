@@ -108,7 +108,7 @@ export default function HomePage() {
               activeId={id}
               onItemClick={(sid) => {
                 setOpenHistory(false);
-                navigate(`/summaries/${sid}`);
+                navigate(`/history/${sid}`);
               }}
               className="w-full p-0 bg-transparent shadow-none"
             />
