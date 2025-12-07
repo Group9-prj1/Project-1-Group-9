@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: text-summarizer-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Persistent cache for Hugging Face models
+      - hf_cache:/app/.hf_cache
+      # Persistent model directory
+      - model_cache:/app/app/llm/models
+      # Optional: mount logs for debugging
+      - ./logs:/app/logs
+    environment:
+      - TRANSFORMERS_CACHE=/app/.hf_cache
+      - HF_HOME=/app/.hf_cache
+      - HF_HUB_DISABLE_SYMLINKS_WARNING=1
+    # Resource limits to prevent OOM
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+        reservations:
+          memory: 2G
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/test-db" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - backend-network
+
+volumes:
+  hf_cache:
+    driver: local
+  model_cache:
+    driver: local
+
+networks:
+  backend-network:
+    driver: bridge

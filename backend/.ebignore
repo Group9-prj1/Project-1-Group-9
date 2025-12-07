@@ -1,0 +1,40 @@
+# Ignore common unwanted files and large model/cache directories so Elastic Beanstalk
+# source bundle stays under 512MB. Adjust patterns if you keep other large files.
+
+# VCS & metadata
+.git
+.gitignore
+
+# Python envs & caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Hugging Face cache, model artifacts and large data
+.hf_cache/
+model/
+models/
+app/llm/models/
+app/llm/Summary_content/
+app/llm/test_model/
+*.pt
+*.pth
+*.tar.gz
+*.zip
+
+# build artifacts / packaging
+dist/
+build/
+*.egg-info/
+
+# logs
+*.log
+logs/
+
+# node / frontend build (if any in repo root)
+node_modules/
+frontend/dist/
+
+# OS
+.DS_Store

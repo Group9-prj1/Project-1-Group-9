@@ -5,7 +5,8 @@ import OutputPanel from "./OutputPanel";
 import UpLoadFile from "./UpLoadFile";
 import ErrorPanel from "./ErrorPanel";
 import DownloadButton from "./DownLoadButton";
-import { cleanInputText, predictSummary, hasEmoji,removeEmojis } from "../../services/summaries";  
+import { cleanInputText, predictSummary, hasEmoji, removeEmojis } from "../../services/summaries";
+import { copyToClipboard } from "../../utils/clipboard";
 import "../../styles/InputPanel.css";
 
 type Props = {
@@ -21,22 +22,22 @@ export default function InputPanel({
 }: Props) {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
-  const nav = useNavigate();                             
+  const nav = useNavigate();
 
   const [inputText, setInputText] = useState(originalText);
-  
+
   const [notice, setNotice] = useState<string | null>(null);
   const [errorOpen, setErrorOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  
+
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
-  
+
   const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(false);              
+  const [loading, setLoading] = useState(false);
 
   const [needLogin, setNeedLogin] = useState(false);
-  
+
   const maxChars = 2000;
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export default function InputPanel({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(summaryText);
+      await copyToClipboard(summaryText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -108,30 +109,30 @@ export default function InputPanel({
         timeoutMs: 15000,
       });
       // chuyển sang trang chi tiết/lịch sử của bản tóm tắt vừa tạo
-      nav(`/summaries/${res.id}`, { state: { summarizedJustNow: true } });
+      nav(`/history/${res.id}`, { state: { summarizedJustNow: true } });
     } catch (e: any) {
       setErrorMsg(e?.message || "Không thể tóm tắt. Vui lòng thử lại.");
       setErrorOpen(true);
     } finally {
       setLoading(false);
-    } 
+    }
   };
   const handlePasteBlockEmoji = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-        const raw = e.clipboardData.getData("text") || "";
-        if (hasEmoji(raw)) {
-          e.preventDefault();
-          setErrorMsg("Không cho phép dán emoji/icon vào nội dung.");
-          setErrorOpen(true);
-        }
+    const raw = e.clipboardData.getData("text") || "";
+    if (hasEmoji(raw)) {
+      e.preventDefault();
+      setErrorMsg("Không cho phép dán emoji/icon vào nội dung.");
+      setErrorOpen(true);
+    }
   };
-// chuyển trang khi người dùng đóng thông báo lỗi
-    const closeErrorAndNavigate = () => {
-      setErrorOpen(false);
-      if (needLogin) {
-        nav("/login");
-        setNeedLogin(false);
-      }
-    };
+  // chuyển trang khi người dùng đóng thông báo lỗi
+  const closeErrorAndNavigate = () => {
+    setErrorOpen(false);
+    if (needLogin) {
+      nav("/login");
+      setNeedLogin(false);
+    }
+  };
   return (
     <div className="ip-page">
       <div className="ip-container">
@@ -244,9 +245,9 @@ export default function InputPanel({
           text={summaryText}
           fileName="van_ban_tom_tat"
           onError={handleUploadError}
-          onSuccess={() =>{ 
+          onSuccess={() => {
             setDownloaded(true)
-            setTimeout(() => setDownloaded(false), 2000);  
+            setTimeout(() => setDownloaded(false), 2000);
           }}
         />
       </div>
