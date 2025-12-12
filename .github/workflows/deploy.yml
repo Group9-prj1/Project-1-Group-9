@@ -1,0 +1,106 @@
+name: CD - Deploy to EC2
+
+on:
+  push:
+    branches: [ main, master, deploy ]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            
+            echo "🚀 Starting deployment..."
+            
+            # Clone latest code from the current branch
+            cd /tmp
+            sudo rm -rf /tmp/repo
+            git clone -b ${{ github.ref_name }} https://${{ secrets.DEPLOY_TOKEN }}@github.com/${{ github.repository }}.git /tmp/repo
+            
+            # Update backend (sync entire directory)
+            echo "📦 Updating backend..."
+            # Backup .env before rsync
+            sudo cp /opt/backend/.env /tmp/backend.env.backup 2>/dev/null || true
+            sudo rsync -av --delete /tmp/repo/backend/ /opt/backend/
+            # Restore .env after rsync
+            sudo cp /tmp/backend.env.backup /opt/backend/.env 2>/dev/null || true
+            
+            # Rebuild backend
+            cd /opt/backend
+            docker-compose down
+            docker-compose up -d --build
+            
+            # Wait for backend (ML models need time)
+            echo "⏳ Waiting for backend (loading ML models)..."
+            sleep 60
+            
+            # Health check with retry
+            echo "🏥 Health check..."
+            for i in {1..5}; do
+              if curl -f http://localhost:8000/test-db 2>/dev/null; then
+                echo "✅ Backend healthy"
+                break
+              else
+                echo "Retry $i/5..."
+                sleep 10
+              fi
+              if [ $i -eq 5 ]; then
+                echo "❌ Backend health check failed"
+                docker-compose logs --tail=50
+                exit 1
+              fi
+            done
+            
+            # Update frontend
+            echo "🎨 Updating frontend..."
+            sudo rsync -av --delete /tmp/repo/frontend/ /opt/frontend/
+            sudo chown -R ubuntu:ubuntu /opt/frontend
+            
+            # Create .env for frontend
+            cd /opt/frontend
+            cat > .env << 'EOF'
+            VITE_API_BASE=http://tomtatvanban.duckdns.org
+            VITE_FRONT_HOME=http://tomtatvanban.duckdns.org
+            EOF
+            
+            # Build frontend
+            npm install
+            npm run build
+            
+            # Reload nginx (serves from /opt/frontend/dist)
+            sudo systemctl reload nginx
+            
+            # Cleanup
+            sudo rm -rf /tmp/repo
+            
+            echo "✅ Deployment completed successfully!"
+            
+            # Show status
+            cd /opt/backend
+            docker-compose ps
+      
+      - name: Deployment notification
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed!"
+            exit 1
+          fi
